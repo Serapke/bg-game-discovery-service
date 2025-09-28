@@ -1,0 +1,35 @@
+catan_seafarers:
+  name: "Catan: Seafarers"
+  board_game: catan
+  min_players: 3
+  max_players: 4
+  min_playing_time: 60
+  max_playing_time: 90
+  rating: 7.1
+
+catan_cities_knights:
+  name: "Catan: Cities & Knights"
+  board_game: catan
+  min_players: 3
+  max_players: 4
+  min_playing_time: 90
+  max_playing_time: 120
+  rating: 7.5
+
+ticket_europe:
+  name: "Ticket to Ride: Europe"
+  board_game: ticket_to_ride
+  min_players: 2
+  max_players: 5
+  min_playing_time: 30
+  max_playing_time: 60
+  rating: 7.6
+
+wingspan_european:
+  name: "Wingspan: European Expansion"
+  board_game: wingspan
+  min_players: 1
+  max_players: 5
+  min_playing_time: 40
+  max_playing_time: 70
+  rating: 8.2

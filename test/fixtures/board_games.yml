@@ -1,0 +1,31 @@
+catan:
+  name: "Catan"
+  min_players: 3
+  max_players: 4
+  min_playing_time: 60
+  max_playing_time: 90
+  rating: 7.2
+
+ticket_to_ride:
+  name: "Ticket to Ride"
+  min_players: 2
+  max_players: 5
+  min_playing_time: 30
+  max_playing_time: 60
+  rating: 7.4
+
+wingspan:
+  name: "Wingspan"
+  min_players: 1
+  max_players: 5
+  min_playing_time: 40
+  max_playing_time: 70
+  rating: 8.1
+
+azul:
+  name: "Azul"
+  min_players: 2
+  max_players: 4
+  min_playing_time: 30
+  max_playing_time: 45
+  rating: 7.8
