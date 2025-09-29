@@ -5,6 +5,51 @@ class Api::V1::BoardGamesControllerTest < ActionDispatch::IntegrationTest
     @board_game = board_games(:catan)
   end
 
+  test "should get index of all board games" do
+    get api_v1_board_games_url
+    assert_response :success
+
+    json_response = JSON.parse(response.body)
+    assert_includes json_response, "board_games"
+    assert_includes json_response, "total"
+    assert_equal BoardGame.count, json_response["total"]
+    assert_equal BoardGame.count, json_response["board_games"].length
+  end
+
+  test "should get index with valid IDs parameter" do
+    board_game1 = board_games(:catan)
+    board_game2 = board_games(:wingspan)
+
+    get api_v1_board_games_url, params: { ids: "#{board_game1.id},#{board_game2.id}" }
+    assert_response :success
+
+    json_response = JSON.parse(response.body)
+    assert_includes json_response, "board_games"
+    assert_includes json_response, "total"
+    assert_equal 2, json_response["total"]
+    assert_equal 2, json_response["board_games"].length
+
+    game_ids = json_response["board_games"].map { |g| g["id"] }
+    assert_includes game_ids, board_game1.id
+    assert_includes game_ids, board_game2.id
+  end
+
+  test "should return bad request for invalid IDs parameter" do
+    get api_v1_board_games_url, params: { ids: "invalid,abc,0" }
+    assert_response :bad_request
+
+    json_response = JSON.parse(response.body)
+    assert_equal "No valid IDs provided", json_response["error"]
+  end
+
+  test "should return bad request for empty IDs parameter" do
+    get api_v1_board_games_url, params: { ids: "" }
+    assert_response :bad_request
+
+    json_response = JSON.parse(response.body)
+    assert_equal "No valid IDs provided", json_response["error"]
+  end
+
   test "should show board game" do
     get api_v1_board_game_url(@board_game)
     assert_response :success

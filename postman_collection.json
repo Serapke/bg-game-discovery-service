@@ -1,6 +1,6 @@
 {
   "info": {
-    "name": "Game Discovery Service API",
+    "name": "Game Discovery API",
     "description": "API for discovering board games and their extensions",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
     "_postman_id": "game-discovery-api",
@@ -14,6 +14,110 @@
     {
       "name": "Board Games",
       "item": [
+        {
+          "name": "Get All Board Games",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/board_games",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "board_games"]
+            },
+            "description": "Retrieve all board games with their extensions"
+          },
+          "response": [
+            {
+              "name": "Success Response",
+              "originalRequest": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{base_url}}/api/v1/board_games",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "board_games"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"board_games\": [\n    {\n      \"id\": 1,\n      \"name\": \"Catan\",\n      \"min_players\": 3,\n      \"max_players\": 4,\n      \"min_playing_time\": 60,\n      \"max_playing_time\": 90,\n      \"rating\": \"7.2\",\n      \"extensions\": [\n        {\n          \"id\": 1,\n          \"name\": \"Catan: Seafarers\",\n          \"min_players\": 3,\n          \"max_players\": 4,\n          \"min_playing_time\": 60,\n          \"max_playing_time\": 90,\n          \"rating\": \"7.1\"\n        }\n      ]\n    }\n  ],\n  \"total\": 4\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get Board Games by IDs",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/board_games?ids=1,2,3",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "board_games"],
+              "query": [
+                {
+                  "key": "ids",
+                  "value": "1,2,3",
+                  "description": "Comma-separated list of board game IDs"
+                }
+              ]
+            },
+            "description": "Retrieve specific board games by their IDs"
+          },
+          "response": [
+            {
+              "name": "Success Response",
+              "originalRequest": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{base_url}}/api/v1/board_games?ids=1,2",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "board_games"],
+                  "query": [
+                    {
+                      "key": "ids",
+                      "value": "1,2"
+                    }
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"board_games\": [\n    {\n      \"id\": 1,\n      \"name\": \"Catan\",\n      \"min_players\": 3,\n      \"max_players\": 4,\n      \"min_playing_time\": 60,\n      \"max_playing_time\": 90,\n      \"rating\": \"7.2\",\n      \"extensions\": []\n    },\n    {\n      \"id\": 2,\n      \"name\": \"Wingspan\",\n      \"min_players\": 1,\n      \"max_players\": 5,\n      \"min_playing_time\": 40,\n      \"max_playing_time\": 70,\n      \"rating\": \"8.0\",\n      \"extensions\": []\n    }\n  ],\n  \"total\": 2\n}"
+            },
+            {
+              "name": "Invalid IDs Error",
+              "originalRequest": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{base_url}}/api/v1/board_games?ids=invalid",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "board_games"],
+                  "query": [
+                    {
+                      "key": "ids",
+                      "value": "invalid"
+                    }
+                  ]
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"error\": \"No valid IDs provided\"\n}"
+            }
+          ]
+        },
         {
           "name": "Get Board Game by ID",
           "request": {
@@ -291,7 +395,7 @@
   "variable": [
     {
       "key": "base_url",
-      "value": "http://localhost:3000",
+      "value": "http://localhost:3002",
       "description": "Base URL for the Game Discovery Service API"
     }
   ],

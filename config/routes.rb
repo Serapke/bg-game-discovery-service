@@ -8,7 +8,7 @@ Rails.application.routes.draw do
   # API routes
   namespace :api do
     namespace :v1 do
-      resources :board_games, only: [:show] do
+      resources :board_games, only: [:index, :show] do
         collection do
           get :search
         end

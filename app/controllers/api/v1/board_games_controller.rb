@@ -1,6 +1,27 @@
 class Api::V1::BoardGamesController < ApplicationController
   before_action :set_board_game, only: [:show]
 
+  def index
+    if params.key?(:ids)
+      # Fetch specific games by IDs
+      ids = params[:ids].to_s.split(',').map(&:to_i).reject(&:zero?)
+
+      if ids.empty?
+        render json: { error: 'No valid IDs provided' }, status: :bad_request
+        return
+      end
+
+      @board_games = BoardGame.includes(:extensions).where(id: ids)
+    else
+      @board_games = BoardGame.includes(:extensions).all
+    end
+
+    render json: {
+      board_games: @board_games.map { |game| board_game_json(game) },
+      total: @board_games.count
+    }
+  end
+
   def show
     render json: board_game_json(@board_game)
   end
