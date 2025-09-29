@@ -30,17 +30,19 @@ class ExtensionTest < ActiveSupport::TestCase
     assert_includes @extension.errors[:board_game], "must exist"
   end
 
-  test "min_players can be nil" do
+  test "should require min_players" do
     @extension.min_players = nil
-    assert @extension.valid?
+    assert_not @extension.valid?
+    assert_includes @extension.errors[:min_players], "can't be blank"
   end
 
-  test "max_players can be nil" do
+  test "should require max_players" do
     @extension.max_players = nil
-    assert @extension.valid?
+    assert_not @extension.valid?
+    assert_includes @extension.errors[:max_players], "can't be blank"
   end
 
-  test "min_players should be greater than 0 when present" do
+  test "min_players should be greater than 0" do
     @extension.min_players = 0
     assert_not @extension.valid?
     assert_includes @extension.errors[:min_players], "must be greater than 0"
@@ -90,13 +92,5 @@ class ExtensionTest < ActiveSupport::TestCase
   test "should belong to board_game" do
     extension = extensions(:catan_seafarers)
     assert_equal board_games(:catan), extension.board_game
-  end
-
-  test "should be valid with only name and board_game" do
-    minimal_extension = Extension.new(
-      name: "Minimal Extension",
-      board_game: @board_game
-    )
-    assert minimal_extension.valid?
   end
 end

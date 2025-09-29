@@ -44,7 +44,7 @@ class BoardGameTest < ActiveSupport::TestCase
     @board_game.min_players = 4
     @board_game.max_players = 2
     assert_not @board_game.valid?
-    assert_includes @board_game.errors[:max_players], "must be greater than or equal to 2"
+    assert_includes @board_game.errors[:max_players], "must be greater than or equal to 4"
   end
 
   test "rating should be between 0 and 10" do
@@ -85,7 +85,9 @@ class BoardGameTest < ActiveSupport::TestCase
     board_game = board_games(:catan)
     extension = Extension.create!(
       name: "Test Extension",
-      board_game: board_game
+      board_game: board_game,
+      min_players: 3,
+      max_players: 5
     )
 
     assert_includes board_game.extensions, extension
@@ -95,10 +97,13 @@ class BoardGameTest < ActiveSupport::TestCase
     board_game = board_games(:catan)
     extension = Extension.create!(
       name: "Test Extension",
-      board_game: board_game
+      board_game: board_game,
+      min_players: 3,
+      max_players: 5
     )
 
-    assert_difference 'Extension.count', -1 do
+    # Catan has 2 fixture extensions + 1 created above = 3 total
+    assert_difference 'Extension.count', -3 do
       board_game.destroy
     end
   end
