@@ -57,6 +57,7 @@ class Api::V1::BoardGamesController < ApplicationController
       min_playing_time: board_game.min_playing_time,
       max_playing_time: board_game.max_playing_time,
       rating: board_game.rating,
+      difficulty_score: board_game.difficulty_score,
       extensions: board_game.extensions.map do |extension|
         {
           id: extension.id,
@@ -65,7 +66,8 @@ class Api::V1::BoardGamesController < ApplicationController
           max_players: extension.max_players,
           min_playing_time: extension.min_playing_time,
           max_playing_time: extension.max_playing_time,
-          rating: extension.rating
+          rating: extension.rating,
+          difficulty_score: extension.difficulty_score
         }
       end
     }
