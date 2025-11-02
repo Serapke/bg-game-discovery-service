@@ -1,5 +1,8 @@
 class BoardGame < ApplicationRecord
+  enum :game_type, { abstract: 'abstract', family: 'family', party: 'party', strategy: 'strategy', thematic: 'thematic' }
+
   validates :name, presence: true
+  validates :game_type, presence: true
   validates :min_players, presence: true, numericality: { greater_than: 0 }
   validates :max_players, presence: true
   validates :max_players, numericality: { greater_than_or_equal_to: :min_players }, if: :min_players

@@ -52,6 +52,7 @@ class Api::V1::BoardGamesController < ApplicationController
     {
       id: board_game.id,
       name: board_game.name,
+      game_type: board_game.game_type,
       min_players: board_game.min_players,
       max_players: board_game.max_players,
       min_playing_time: board_game.min_playing_time,

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 20251103) do
+ActiveRecord::Schema[8.0].define(version: 2025_11_02_201200) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -24,6 +24,7 @@ ActiveRecord::Schema[8.0].define(version: 20251103) do
     t.timestamptz "created_at", default: -> { "CURRENT_TIMESTAMP" }
     t.timestamptz "updated_at", default: -> { "CURRENT_TIMESTAMP" }
     t.decimal "difficulty_score", precision: 3, scale: 2
+    t.string "game_type", null: false
     t.index ["name"], name: "idx_board_games_name"
     t.index ["rating"], name: "idx_board_games_rating"
     t.check_constraint "max_players >= min_players", name: "board_games_check"
