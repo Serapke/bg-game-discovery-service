@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_11_02_201200) do
+ActiveRecord::Schema[8.0].define(version: 2025_11_07_173553) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -24,7 +24,6 @@ ActiveRecord::Schema[8.0].define(version: 2025_11_02_201200) do
     t.timestamptz "created_at", default: -> { "CURRENT_TIMESTAMP" }
     t.timestamptz "updated_at", default: -> { "CURRENT_TIMESTAMP" }
     t.decimal "difficulty_score", precision: 3, scale: 2
-    t.string "game_type", null: false
     t.index ["name"], name: "idx_board_games_name"
     t.index ["rating"], name: "idx_board_games_rating"
     t.check_constraint "max_players >= min_players", name: "board_games_check"
@@ -32,6 +31,13 @@ ActiveRecord::Schema[8.0].define(version: 2025_11_02_201200) do
     t.check_constraint "min_players > 0", name: "board_games_min_players_check"
     t.check_constraint "min_playing_time > 0", name: "board_games_min_playing_time_check"
     t.check_constraint "rating >= 0::numeric AND rating <= 10::numeric", name: "board_games_rating_check"
+  end
+
+  create_table "board_games_game_types", id: false, force: :cascade do |t|
+    t.bigint "board_game_id", null: false
+    t.bigint "game_type_id", null: false
+    t.index ["board_game_id", "game_type_id"], name: "index_board_games_game_types_on_board_game_id_and_game_type_id"
+    t.index ["game_type_id", "board_game_id"], name: "index_board_games_game_types_on_game_type_id_and_board_game_id"
   end
 
   create_table "extensions", id: :serial, force: :cascade do |t|
@@ -52,6 +58,13 @@ ActiveRecord::Schema[8.0].define(version: 2025_11_02_201200) do
     t.check_constraint "min_players > 0", name: "extensions_min_players_check"
     t.check_constraint "min_playing_time > 0", name: "extensions_min_playing_time_check"
     t.check_constraint "rating >= 0::numeric AND rating <= 10::numeric", name: "extensions_rating_check"
+  end
+
+  create_table "game_types", force: :cascade do |t|
+    t.string "name", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["name"], name: "index_game_types_on_name", unique: true
   end
 
   add_foreign_key "extensions", "board_games", name: "extensions_board_game_id_fkey", on_delete: :cascade

@@ -2,17 +2,30 @@
 # development, test). The code here should be idempotent so that it can be executed at any point in every environment.
 # The data can then be loaded with the bin/rails db:seed command (or created alongside the database with db:setup).
 
+# Create game types
+game_type_names = ['abstract', 'family', 'party', 'strategy', 'thematic']
+game_types = {}
+game_type_names.each do |type_name|
+  game_types[type_name] = GameType.find_or_create_by!(name: type_name)
+end
+
 board_games_data = [
-  { name: 'Catan', min_players: 3, max_players: 4, min_playing_time: 60, max_playing_time: 90, rating: 7.2, difficulty_score: 2.5, game_type: 'strategy' },
-  { name: 'Ticket to Ride', min_players: 2, max_players: 5, min_playing_time: 30, max_playing_time: 60, rating: 7.4, difficulty_score: 1.8, game_type: 'family' },
-  { name: 'Wingspan', min_players: 1, max_players: 5, min_playing_time: 40, max_playing_time: 70, rating: 8.1, difficulty_score: 2.5, game_type: 'strategy' },
-  { name: 'Azul', min_players: 2, max_players: 4, min_playing_time: 30, max_playing_time: 45, rating: 7.8, difficulty_score: 2.0, game_type: 'abstract' }
+  { name: 'Catan', min_players: 3, max_players: 4, min_playing_time: 60, max_playing_time: 90, rating: 7.2, difficulty_score: 2.5, game_type_names: ['strategy', 'family'] },
+  { name: 'Ticket to Ride', min_players: 2, max_players: 5, min_playing_time: 30, max_playing_time: 60, rating: 7.4, difficulty_score: 1.8, game_type_names: ['family'] },
+  { name: 'Wingspan', min_players: 1, max_players: 5, min_playing_time: 40, max_playing_time: 70, rating: 8.1, difficulty_score: 2.5, game_type_names: ['strategy'] },
+  { name: 'Azul', min_players: 2, max_players: 4, min_playing_time: 30, max_playing_time: 45, rating: 7.8, difficulty_score: 2.0, game_type_names: ['abstract', 'family'] }
 ]
 
 board_games_data.each do |game_data|
-  BoardGame.find_or_create_by!(name: game_data[:name]) do |game|
-    game.assign_attributes(game_data)
+  type_names = game_data.delete(:game_type_names)
+
+  game = BoardGame.find_or_create_by!(name: game_data[:name]) do |g|
+    g.assign_attributes(game_data)
   end
+
+  # Associate game types
+  game.game_types = type_names.map { |type_name| game_types[type_name] }
+  game.save!
 end
 
 # Create extensions

@@ -1,0 +1,16 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+abstract:
+  name: abstract
+
+family:
+  name: family
+
+party:
+  name: party
+
+strategy:
+  name: strategy
+
+thematic:
+  name: thematic
