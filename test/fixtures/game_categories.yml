@@ -1,0 +1,37 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+ancient:
+  name: Ancient
+
+card_game:
+  name: Card Game
+
+city_building:
+  name: City Building
+
+civilization:
+  name: Civilization
+
+economic:
+  name: Economic
+
+negotiation:
+  name: Negotiation
+
+deduction:
+  name: Deduction
+
+word_game:
+  name: Word Game
+
+territory_building:
+  name: Territory Building
+
+humor:
+  name: Humor
+
+bluffing:
+  name: Bluffing
+
+exploration:
+  name: Exploration

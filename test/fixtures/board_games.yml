@@ -6,6 +6,7 @@ catan:
   max_playing_time: 90
   rating: 7.2
   game_types: strategy, family
+  game_categories: economic, negotiation
 
 ticket_to_ride:
   name: "Ticket to Ride"
@@ -15,6 +16,7 @@ ticket_to_ride:
   max_playing_time: 60
   rating: 7.4
   game_types: family
+  game_categories: card_game
 
 wingspan:
   name: "Wingspan"
@@ -24,6 +26,7 @@ wingspan:
   max_playing_time: 70
   rating: 8.1
   game_types: strategy
+  game_categories: card_game
 
 azul:
   name: "Azul"
@@ -33,3 +36,4 @@ azul:
   max_playing_time: 45
   rating: 7.8
   game_types: abstract, family
+  game_categories: ancient

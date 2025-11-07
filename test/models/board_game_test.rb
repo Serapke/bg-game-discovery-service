@@ -3,6 +3,7 @@ require "test_helper"
 class BoardGameTest < ActiveSupport::TestCase
   def setup
     @game_type = GameType.create!(name: "test_type")
+    @game_category = GameCategory.create!(name: "test_category")
     @board_game = BoardGame.new(
       name: "Test Game",
       min_players: 2,
@@ -10,7 +11,8 @@ class BoardGameTest < ActiveSupport::TestCase
       min_playing_time: 30,
       max_playing_time: 60,
       rating: 7.5,
-      game_types: [@game_type]
+      game_types: [@game_type],
+      game_categories: [@game_category]
     )
   end
 
@@ -39,6 +41,29 @@ class BoardGameTest < ActiveSupport::TestCase
 
     assert_includes @board_game.game_types, @game_type
     assert_includes @game_type.board_games, @board_game
+  end
+
+  test "should require at least one game category" do
+    @board_game.game_categories = []
+    assert_not @board_game.valid?
+    assert_includes @board_game.errors[:game_categories], "must have at least one game category"
+  end
+
+  test "should allow multiple game categories" do
+    economic = game_categories(:economic)
+    negotiation = game_categories(:negotiation)
+    @board_game.save!
+    @board_game.game_categories = [economic, negotiation]
+
+    assert @board_game.valid?
+    assert_equal 2, @board_game.game_categories.count
+  end
+
+  test "should associate with game categories" do
+    @board_game.save!
+
+    assert_includes @board_game.game_categories, @game_category
+    assert_includes @game_category.board_games, @board_game
   end
 
   test "should require name" do

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_11_07_173553) do
+ActiveRecord::Schema[8.0].define(version: 2025_11_07_175506) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -31,6 +31,13 @@ ActiveRecord::Schema[8.0].define(version: 2025_11_07_173553) do
     t.check_constraint "min_players > 0", name: "board_games_min_players_check"
     t.check_constraint "min_playing_time > 0", name: "board_games_min_playing_time_check"
     t.check_constraint "rating >= 0::numeric AND rating <= 10::numeric", name: "board_games_rating_check"
+  end
+
+  create_table "board_games_game_categories", id: false, force: :cascade do |t|
+    t.bigint "board_game_id", null: false
+    t.bigint "game_category_id", null: false
+    t.index ["board_game_id", "game_category_id"], name: "idx_on_board_game_id_game_category_id_72511a3062"
+    t.index ["game_category_id", "board_game_id"], name: "idx_on_game_category_id_board_game_id_87cc6e2be1"
   end
 
   create_table "board_games_game_types", id: false, force: :cascade do |t|
@@ -58,6 +65,13 @@ ActiveRecord::Schema[8.0].define(version: 2025_11_07_173553) do
     t.check_constraint "min_players > 0", name: "extensions_min_players_check"
     t.check_constraint "min_playing_time > 0", name: "extensions_min_playing_time_check"
     t.check_constraint "rating >= 0::numeric AND rating <= 10::numeric", name: "extensions_rating_check"
+  end
+
+  create_table "game_categories", force: :cascade do |t|
+    t.string "name", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["name"], name: "index_game_categories_on_name", unique: true
   end
 
   create_table "game_types", force: :cascade do |t|
