@@ -11,9 +11,9 @@ class Api::V1::BoardGamesController < ApplicationController
         return
       end
 
-      @board_games = BoardGame.includes(:extensions).where(id: ids)
+      @board_games = BoardGame.includes(:extensions, :game_types, :game_categories).where(id: ids)
     else
-      @board_games = BoardGame.includes(:extensions).all
+      @board_games = BoardGame.includes(:extensions, :game_types, :game_categories).all
     end
 
     render json: {
@@ -27,7 +27,7 @@ class Api::V1::BoardGamesController < ApplicationController
   end
 
   def search
-    board_games = BoardGame.includes(:extensions)
+    board_games = BoardGame.includes(:extensions, :game_types, :game_categories)
     board_games = board_games.search_by_name(params[:name]) if params[:name].present?
     board_games = board_games.for_player_count(params[:player_count]) if params[:player_count].present?
     board_games = board_games.for_playing_time(params[:playing_time]) if params[:playing_time].present?
@@ -43,7 +43,7 @@ class Api::V1::BoardGamesController < ApplicationController
   private
 
   def set_board_game
-    @board_game = BoardGame.includes(:extensions).find(params[:id])
+    @board_game = BoardGame.includes(:extensions, :game_types, :game_categories).find(params[:id])
   rescue ActiveRecord::RecordNotFound
     render json: { error: 'Board game not found' }, status: :not_found
   end
@@ -52,7 +52,8 @@ class Api::V1::BoardGamesController < ApplicationController
     {
       id: board_game.id,
       name: board_game.name,
-      game_type: board_game.game_type,
+      game_types: board_game.game_types.map(&:name),
+      game_categories: board_game.game_categories.map(&:name),
       min_players: board_game.min_players,
       max_players: board_game.max_players,
       min_playing_time: board_game.min_playing_time,

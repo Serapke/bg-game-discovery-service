@@ -14,6 +14,14 @@ class Api::V1::BoardGamesControllerTest < ActionDispatch::IntegrationTest
     assert_includes json_response, "total"
     assert_equal BoardGame.count, json_response["total"]
     assert_equal BoardGame.count, json_response["board_games"].length
+
+    # Verify each game has game_types and game_categories
+    json_response["board_games"].each do |game|
+      assert_includes game, "game_types"
+      assert_includes game, "game_categories"
+      assert game["game_types"].is_a?(Array)
+      assert game["game_categories"].is_a?(Array)
+    end
   end
 
   test "should get index with valid IDs parameter" do
@@ -247,10 +255,20 @@ class Api::V1::BoardGamesControllerTest < ActionDispatch::IntegrationTest
 
     json_response = JSON.parse(response.body)
 
-    required_fields = %w[id name min_players max_players min_playing_time max_playing_time rating extensions]
+    required_fields = %w[id name game_types game_categories min_players max_players min_playing_time max_playing_time rating extensions]
     required_fields.each do |field|
       assert_includes json_response, field, "Response should include #{field}"
     end
+
+    # Verify game_types is an array and contains strings
+    assert json_response["game_types"].is_a?(Array), "game_types should be an array"
+    assert json_response["game_types"].all? { |type| type.is_a?(String) }, "game_types should contain strings"
+    assert json_response["game_types"].any?, "game_types should not be empty"
+
+    # Verify game_categories is an array and contains strings
+    assert json_response["game_categories"].is_a?(Array), "game_categories should be an array"
+    assert json_response["game_categories"].all? { |cat| cat.is_a?(String) }, "game_categories should contain strings"
+    assert json_response["game_categories"].any?, "game_categories should not be empty"
 
     extensions = json_response["extensions"]
     if extensions.any?
