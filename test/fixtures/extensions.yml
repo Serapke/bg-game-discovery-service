@@ -1,5 +1,6 @@
 catan_seafarers:
   name: "Catan: Seafarers"
+  year_published: 1997
   board_game: catan
   min_players: 3
   max_players: 4
@@ -9,6 +10,7 @@ catan_seafarers:
 
 catan_cities_knights:
   name: "Catan: Cities & Knights"
+  year_published: 1998
   board_game: catan
   min_players: 3
   max_players: 4
@@ -18,6 +20,7 @@ catan_cities_knights:
 
 ticket_europe:
   name: "Ticket to Ride: Europe"
+  year_published: 2005
   board_game: ticket_to_ride
   min_players: 2
   max_players: 5
@@ -27,6 +30,7 @@ ticket_europe:
 
 wingspan_european:
   name: "Wingspan: European Expansion"
+  year_published: 2019
   board_game: wingspan
   min_players: 1
   max_players: 5

@@ -10,7 +10,7 @@ module BoardGames
     test "serialize returns hash with all required fields" do
       result = @serializer.serialize(@board_game)
 
-      required_fields = [:id, :name, :game_types, :game_categories, :min_players,
+      required_fields = [:id, :name, :year_published, :game_types, :game_categories, :min_players,
                         :max_players, :min_playing_time, :max_playing_time,
                         :rating, :difficulty_score, :extensions]
 
@@ -55,7 +55,7 @@ module BoardGames
 
       if extensions.any?
         extension = extensions.first
-        required_extension_fields = [:id, :name, :min_players, :max_players,
+        required_extension_fields = [:id, :name, :year_published, :min_players, :max_players,
                                      :min_playing_time, :max_playing_time,
                                      :rating, :difficulty_score]
 
@@ -111,6 +111,7 @@ module BoardGames
 
       board_game_without_extensions = BoardGame.create!(
         name: "Test Game",
+        year_published: 2020,
         min_players: 1,
         max_players: 4,
         min_playing_time: 30,

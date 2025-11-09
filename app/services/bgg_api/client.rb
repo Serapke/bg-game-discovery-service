@@ -43,9 +43,13 @@ module BggApi
       params = build_search_params(query, options)
       response = get("search", params)
       parse_search_response(response)
-    rescue Faraday::TimeoutError => e
+    rescue Faraday::TimeoutError, Faraday::ConnectionFailed, Timeout::Error => e
       raise TimeoutError, "Request to BGG API timed out: #{e.message}"
     rescue Faraday::Error => e
+      # Check if it's a timeout-related error
+      if e.message.include?("execution expired") || e.message.include?("timeout")
+        raise TimeoutError, "Request to BGG API timed out: #{e.message}"
+      end
       raise ApiError, "BGG API request failed: #{e.message}"
     rescue REXML::ParseException => e
       raise ParseError, "Failed to parse BGG API response: #{e.message}"

@@ -22,6 +22,7 @@ class GameTypeTest < ActiveSupport::TestCase
     game_category = GameCategory.create!(name: "strategy")
     board_game = BoardGame.create!(
       name: "Test Game",
+      year_published: 2020,
       min_players: 2,
       max_players: 4,
       game_types: [game_type],

@@ -12,6 +12,7 @@ module BoardGames
       {
         id: board_game.id,
         name: board_game.name,
+        year_published: board_game.year_published,
         game_types: board_game.game_types.map(&:name),
         game_categories: board_game.game_categories.map(&:name),
         min_players: board_game.min_players,
@@ -38,6 +39,7 @@ module BoardGames
         {
           id: extension.id,
           name: extension.name,
+          year_published: extension.year_published,
           min_players: extension.min_players,
           max_players: extension.max_players,
           min_playing_time: extension.min_playing_time,

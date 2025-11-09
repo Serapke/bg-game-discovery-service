@@ -18,13 +18,13 @@ game_category_names.each do |category_name|
 end
 
 board_games_data = [
-  { name: 'Catan', min_players: 3, max_players: 4, min_playing_time: 60, max_playing_time: 90, rating: 7.2, difficulty_score: 2.5,
+  { name: 'Catan', year_published: 1995, min_players: 3, max_players: 4, min_playing_time: 60, max_playing_time: 90, rating: 7.2, difficulty_score: 2.5,
     game_type_names: ['strategy', 'family'], game_category_names: ['Economic', 'Negotiation'] },
-  { name: 'Ticket to Ride', min_players: 2, max_players: 5, min_playing_time: 30, max_playing_time: 60, rating: 7.4, difficulty_score: 1.8,
+  { name: 'Ticket to Ride', year_published: 2004, min_players: 2, max_players: 5, min_playing_time: 30, max_playing_time: 60, rating: 7.4, difficulty_score: 1.8,
     game_type_names: ['family'], game_category_names: ['Card Game'] },
-  { name: 'Wingspan', min_players: 1, max_players: 5, min_playing_time: 40, max_playing_time: 70, rating: 8.1, difficulty_score: 2.5,
+  { name: 'Wingspan', year_published: 2019, min_players: 1, max_players: 5, min_playing_time: 40, max_playing_time: 70, rating: 8.1, difficulty_score: 2.5,
     game_type_names: ['strategy'], game_category_names: ['Card Game'] },
-  { name: 'Azul', min_players: 2, max_players: 4, min_playing_time: 30, max_playing_time: 45, rating: 7.8, difficulty_score: 2.0,
+  { name: 'Azul', year_published: 2017, min_players: 2, max_players: 4, min_playing_time: 30, max_playing_time: 45, rating: 7.8, difficulty_score: 2.0,
     game_type_names: ['abstract', 'family'], game_category_names: ['Ancient'] }
 ]
 
@@ -32,9 +32,8 @@ board_games_data.each do |game_data|
   type_names = game_data.delete(:game_type_names)
   category_names = game_data.delete(:game_category_names)
 
-  game = BoardGame.find_or_create_by!(name: game_data[:name]) do |g|
-    g.assign_attributes(game_data)
-  end
+  game = BoardGame.find_or_initialize_by(name: game_data[:name])
+  game.assign_attributes(game_data)
 
   # Associate game types and categories
   game.game_types = type_names.map { |type_name| game_types[type_name] }
@@ -48,10 +47,10 @@ ticket_to_ride = BoardGame.find_by(name: 'Ticket to Ride')
 wingspan = BoardGame.find_by(name: 'Wingspan')
 
 extensions_data = [
-  { name: 'Catan: Seafarers', board_game: catan, min_players: 3, max_players: 4, min_playing_time: 60, max_playing_time: 90, rating: 7.1, difficulty_score: 2.6 },
-  { name: 'Catan: Cities & Knights', board_game: catan, min_players: 3, max_players: 4, min_playing_time: 90, max_playing_time: 120, rating: 7.5, difficulty_score: 3.2 },
-  { name: 'Ticket to Ride: Europe', board_game: ticket_to_ride, min_players: 2, max_players: 5, min_playing_time: 30, max_playing_time: 60, rating: 7.6, difficulty_score: 1.9 },
-  { name: 'Wingspan: European Expansion', board_game: wingspan, min_players: 1, max_players: 5, min_playing_time: 40, max_playing_time: 70, rating: 8.2, difficulty_score: 2.5 }
+  { name: 'Catan: Seafarers', year_published: 1997, board_game: catan, min_players: 3, max_players: 4, min_playing_time: 60, max_playing_time: 90, rating: 7.1, difficulty_score: 2.6 },
+  { name: 'Catan: Cities & Knights', year_published: 1998, board_game: catan, min_players: 3, max_players: 4, min_playing_time: 90, max_playing_time: 120, rating: 7.5, difficulty_score: 3.2 },
+  { name: 'Ticket to Ride: Europe', year_published: 2005, board_game: ticket_to_ride, min_players: 2, max_players: 5, min_playing_time: 30, max_playing_time: 60, rating: 7.6, difficulty_score: 1.9 },
+  { name: 'Wingspan: European Expansion', year_published: 2019, board_game: wingspan, min_players: 1, max_players: 5, min_playing_time: 40, max_playing_time: 70, rating: 8.2, difficulty_score: 2.5 }
 ]
 
 extensions_data.each do |extension_data|

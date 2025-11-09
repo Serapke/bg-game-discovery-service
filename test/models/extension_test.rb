@@ -5,6 +5,7 @@ class ExtensionTest < ActiveSupport::TestCase
     @board_game = board_games(:catan)
     @extension = Extension.new(
       name: "Test Extension",
+      year_published: 2021,
       board_game: @board_game,
       min_players: 3,
       max_players: 5,

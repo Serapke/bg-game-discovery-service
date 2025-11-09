@@ -1,5 +1,6 @@
 catan:
   name: "Catan"
+  year_published: 1995
   min_players: 3
   max_players: 4
   min_playing_time: 60
@@ -10,6 +11,7 @@ catan:
 
 ticket_to_ride:
   name: "Ticket to Ride"
+  year_published: 2004
   min_players: 2
   max_players: 5
   min_playing_time: 30
@@ -20,6 +22,7 @@ ticket_to_ride:
 
 wingspan:
   name: "Wingspan"
+  year_published: 2019
   min_players: 1
   max_players: 5
   min_playing_time: 40
@@ -30,6 +33,7 @@ wingspan:
 
 azul:
   name: "Azul"
+  year_published: 2017
   min_players: 2
   max_players: 4
   min_playing_time: 30

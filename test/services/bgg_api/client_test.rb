@@ -33,26 +33,20 @@ module BggApi
       XML
 
       stub_request(:get, "#{@base_url}/search")
-        .with(query: { query: "Catan", type: "boardgame", exact: 0 })
+        .with(query: { query: "Catan", type: "boardgame,boardgameexpansion", exact: 0 })
         .to_return(status: 200, body: xml_response)
 
       result = @client.search("Catan")
 
       assert_equal 141, result[:total]
-      assert_equal 2, result[:items].length
+      assert_equal 1, result[:items].length  # Only primary names are returned
 
-      first_item = result[:items].first
-      assert_equal "134277", first_item[:id]
-      assert_equal "boardgame", first_item[:type]
-      assert_equal "The 7 Wonders of Catan (fan expansion for Catan)", first_item[:name]
-      assert_equal "alternate", first_item[:name_type]
-      assert_equal "2012", first_item[:year_published]
-
-      second_item = result[:items].last
-      assert_equal "110308", second_item[:id]
-      assert_equal "primary", second_item[:name_type]
-      assert_equal "7 Wonders: Catan", second_item[:name]
-      assert_equal "2011", second_item[:year_published]
+      item = result[:items].first
+      assert_equal "110308", item[:id]
+      assert_equal "boardgame", item[:type]
+      assert_equal "7 Wonders: Catan", item[:name]
+      assert_equal "2011", item[:year_published]
+      assert_nil item[:name_type]  # name_type field is not included
     end
 
     test "search with exact option sends exact parameter" do
@@ -67,7 +61,7 @@ module BggApi
       XML
 
       stub_request(:get, "#{@base_url}/search")
-        .with(query: { query: "Catan", type: "boardgame", exact: 1 })
+        .with(query: { query: "Catan", type: "boardgame,boardgameexpansion", exact: 1 })
         .to_return(status: 200, body: xml_response)
 
       result = @client.search("Catan", exact: true)
@@ -105,7 +99,7 @@ module BggApi
       XML
 
       stub_request(:get, "#{@base_url}/search")
-        .with(query: { query: "NonexistentGame123456789", type: "boardgame", exact: 0 })
+        .with(query: { query: "NonexistentGame123456789", type: "boardgame,boardgameexpansion", exact: 0 })
         .to_return(status: 200, body: xml_response)
 
       result = @client.search("NonexistentGame123456789")
@@ -125,7 +119,7 @@ module BggApi
       XML
 
       stub_request(:get, "#{@base_url}/search")
-        .with(query: { query: "test", type: "boardgame", exact: 0 })
+        .with(query: { query: "test", type: "boardgame,boardgameexpansion", exact: 0 })
         .to_return(status: 200, body: xml_response)
 
       result = @client.search("test")
@@ -155,7 +149,7 @@ module BggApi
 
     test "search raises TimeoutError when request times out" do
       stub_request(:get, "#{@base_url}/search")
-        .with(query: { query: "Catan", type: "boardgame", exact: 0 })
+        .with(query: { query: "Catan", type: "boardgame,boardgameexpansion", exact: 0 })
         .to_timeout
 
       error = assert_raises(BggApi::Client::TimeoutError) do
@@ -167,7 +161,7 @@ module BggApi
 
     test "search raises ApiError for network errors" do
       stub_request(:get, "#{@base_url}/search")
-        .with(query: { query: "Catan", type: "boardgame", exact: 0 })
+        .with(query: { query: "Catan", type: "boardgame,boardgameexpansion", exact: 0 })
         .to_return(status: 500, body: "Internal Server Error")
 
       error = assert_raises(BggApi::Client::ApiError) do
@@ -179,7 +173,7 @@ module BggApi
 
     test "search raises ParseError for invalid XML" do
       stub_request(:get, "#{@base_url}/search")
-        .with(query: { query: "Catan", type: "boardgame", exact: 0 })
+        .with(query: { query: "Catan", type: "boardgame,boardgameexpansion", exact: 0 })
         .to_return(status: 200, body: "This is not valid XML")
 
       error = assert_raises(BggApi::Client::ParseError) do
@@ -198,7 +192,7 @@ module BggApi
       XML
 
       stub_request(:get, "#{@base_url}/search")
-        .with(query: { query: "Catan", type: "boardgame", exact: 0 })
+        .with(query: { query: "Catan", type: "boardgame,boardgameexpansion", exact: 0 })
         .to_return(status: 200, body: xml_response)
 
       error = assert_raises(BggApi::Client::ParseError) do
@@ -213,14 +207,14 @@ module BggApi
         <?xml version="1.0" encoding="utf-8"?>
         <items total="1" termsofuse="https://boardgamegeek.com/xmlapi/termsofuse">
             <item type="boardgame" id="12345">
-                <name type="primary" value="Game & Dragons"/>
+                <name type="primary" value="Game &amp; Dragons"/>
                 <yearpublished value="2020" />
             </item>
         </items>
       XML
 
       stub_request(:get, "#{@base_url}/search")
-        .with(query: { query: "Game & Dragons", type: "boardgame", exact: 0 })
+        .with(query: { query: "Game & Dragons", type: "boardgame,boardgameexpansion", exact: 0 })
         .to_return(status: 200, body: xml_response)
 
       result = @client.search("Game & Dragons")

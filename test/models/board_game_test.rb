@@ -6,6 +6,7 @@ class BoardGameTest < ActiveSupport::TestCase
     @game_category = GameCategory.create!(name: "test_category")
     @board_game = BoardGame.new(
       name: "Test Game",
+      year_published: 2020,
       min_players: 2,
       max_players: 4,
       min_playing_time: 30,
@@ -135,6 +136,7 @@ class BoardGameTest < ActiveSupport::TestCase
     board_game = board_games(:catan)
     extension = Extension.create!(
       name: "Test Extension",
+      year_published: 2021,
       board_game: board_game,
       min_players: 3,
       max_players: 5
@@ -147,6 +149,7 @@ class BoardGameTest < ActiveSupport::TestCase
     board_game = board_games(:catan)
     extension = Extension.create!(
       name: "Test Extension",
+      year_published: 2021,
       board_game: board_game,
       min_players: 3,
       max_players: 5

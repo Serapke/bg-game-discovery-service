@@ -9,4 +9,5 @@ class Extension < ApplicationRecord
   validates :max_playing_time, numericality: { greater_than_or_equal_to: :min_playing_time }, allow_nil: true, if: :min_playing_time
   validates :rating, numericality: { greater_than_or_equal_to: 0, less_than_or_equal_to: 10 }, allow_nil: true
   validates :difficulty_score, numericality: { greater_than_or_equal_to: 0, less_than_or_equal_to: 5 }, allow_nil: true
+  validates :year_published, presence: true, numericality: { only_integer: true, greater_than: 0 }
 end
