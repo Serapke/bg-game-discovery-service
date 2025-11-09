@@ -19,11 +19,13 @@ class GameTypeTest < ActiveSupport::TestCase
 
   test "should associate with board games" do
     game_type = GameType.create!(name: "euro")
+    game_category = GameCategory.create!(name: "strategy")
     board_game = BoardGame.create!(
       name: "Test Game",
       min_players: 2,
       max_players: 4,
-      game_types: [game_type]
+      game_types: [game_type],
+      game_categories: [game_category]
     )
 
     assert_includes game_type.board_games, board_game
