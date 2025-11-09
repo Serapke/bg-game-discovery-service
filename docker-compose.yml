@@ -33,6 +33,7 @@ services:
       - POSTGRES_PORT=5432
       - RAILS_MAX_THREADS=${RAILS_MAX_THREADS:-5}
       - PORT=3002
+      - BGG_API_TOKEN=${BGG_API_TOKEN}
     ports:
       - "3002:3002"
       - "1234:1234"  # Debug port for rdbg
