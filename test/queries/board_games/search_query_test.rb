@@ -70,11 +70,10 @@ module BoardGames
       end
     end
 
-    test "call ignores blank name parameter" do
-      result_all = @query.call({})
-      result_blank = @query.call({ name: "" })
-
-      assert_equal result_all.count, result_blank.count
+    test "call raises error for blank name parameter" do
+      assert_raises(ArgumentError, "Name parameter cannot be empty") do
+        @query.call({ name: "" })
+      end
     end
 
     test "call ignores blank player_count parameter" do

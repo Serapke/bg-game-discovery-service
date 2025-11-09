@@ -5,14 +5,21 @@ module BoardGames
     end
 
     def call(params)
+      validate_params!(params)
+
       scope = @relation.includes(:extensions, :game_types, :game_categories)
       scope = apply_name_filter(scope, params[:name])
       scope = apply_player_count_filter(scope, params[:player_count])
-      scope = apply_playing_time_filters(scope, params)
-      scope
+      apply_playing_time_filters(scope, params)
     end
 
     private
+
+    def validate_params!(params)
+      if params.key?(:name) && params[:name].blank?
+        raise ArgumentError, 'Name parameter cannot be empty'
+      end
+    end
 
     def apply_name_filter(scope, name)
       return scope if name.blank?

@@ -20,6 +20,8 @@ class Api::V1::BoardGamesController < ApplicationController
   def search
     board_games = ::BoardGames::SearchQuery.new.call(params)
     render json: ::BoardGames::Serializer.serialize_collection(board_games)
+  rescue ArgumentError => e
+    render json: { error: e.message }, status: :bad_request
   end
 
   private

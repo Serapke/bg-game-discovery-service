@@ -179,6 +179,14 @@ class Api::V1::BoardGamesControllerTest < ActionDispatch::IntegrationTest
     assert_equal 0, json_response["total"]
   end
 
+  test "should return bad request for empty name parameter" do
+    get search_api_v1_board_games_url, params: { name: "" }
+    assert_response :bad_request
+
+    json_response = JSON.parse(response.body)
+    assert_equal "Name parameter cannot be empty", json_response["error"]
+  end
+
   test "should filter board games by exact playing time" do
     get search_api_v1_board_games_url, params: { playing_time: 70 }
     assert_response :success
