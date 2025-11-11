@@ -1,5 +1,6 @@
 class Extension < ApplicationRecord
   belongs_to :board_game
+  has_one :bgg_extension_association, dependent: :destroy
 
   validates :name, presence: true
   validates :min_players, presence: true, numericality: { greater_than: 0 }

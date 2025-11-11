@@ -2,6 +2,7 @@ class BoardGame < ApplicationRecord
   has_and_belongs_to_many :game_types
   has_and_belongs_to_many :game_categories
   has_many :extensions, dependent: :destroy
+  has_one :bgg_board_game_association, dependent: :destroy
 
   validates :name, presence: true
   validates :min_players, presence: true, numericality: { greater_than: 0 }

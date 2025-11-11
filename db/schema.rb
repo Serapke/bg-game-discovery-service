@@ -10,9 +10,31 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_11_09_095015) do
+ActiveRecord::Schema[8.0].define(version: 2025_11_11_051205) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
+
+  create_table "bgg_board_game_associations", force: :cascade do |t|
+    t.bigint "board_game_id", null: false
+    t.bigint "bgg_id", null: false
+    t.datetime "created_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
+    t.datetime "updated_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
+    t.index ["bgg_id"], name: "index_bgg_board_game_associations_on_bgg_id", unique: true
+    t.index ["board_game_id", "bgg_id"], name: "index_bgg_associations_on_board_game_and_bgg_id", unique: true
+    t.index ["board_game_id"], name: "index_bgg_board_game_associations_on_board_game_id"
+    t.check_constraint "bgg_id > 0", name: "check_bgg_id_positive"
+  end
+
+  create_table "bgg_extension_associations", force: :cascade do |t|
+    t.bigint "extension_id", null: false
+    t.bigint "bgg_id", null: false
+    t.datetime "created_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
+    t.datetime "updated_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
+    t.index ["bgg_id"], name: "index_bgg_extension_associations_on_bgg_id", unique: true
+    t.index ["extension_id", "bgg_id"], name: "index_bgg_ext_associations_on_extension_and_bgg_id", unique: true
+    t.index ["extension_id"], name: "index_bgg_extension_associations_on_extension_id"
+    t.check_constraint "bgg_id > 0", name: "check_bgg_ext_id_positive"
+  end
 
   create_table "board_games", id: :serial, force: :cascade do |t|
     t.string "name", limit: 255, null: false
@@ -83,5 +105,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_11_09_095015) do
     t.index ["name"], name: "index_game_types_on_name", unique: true
   end
 
+  add_foreign_key "bgg_board_game_associations", "board_games", on_delete: :cascade
+  add_foreign_key "bgg_extension_associations", "extensions", on_delete: :cascade
   add_foreign_key "extensions", "board_games", name: "extensions_board_game_id_fkey", on_delete: :cascade
 end
