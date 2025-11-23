@@ -55,6 +55,57 @@ module BggApi
       raise ParseError, "Failed to parse BGG API response: #{e.message}"
     end
 
+    # Get detailed information for board games by their BGG IDs
+    #
+    # @param ids [Array<Integer>, Integer] BGG ID(s) to fetch details for (max 20 per request)
+    # @param options [Hash] optional parameters
+    # @option options [Integer] :min_user_ratings minimum number of user ratings required (default: 10000)
+    #
+    # @return [Array<Hash>] array of game details, filtered by minimum user ratings
+    #
+    # @example
+    #   client = BggApi::Client.new
+    #   details = client.get_details([13, 2807])
+    #   # => [
+    #   #   {
+    #   #     id: 13,
+    #   #     type: "boardgame",
+    #   #     name: "Catan",
+    #   #     year_published: 1995,
+    #   #     min_players: 3,
+    #   #     max_players: 4,
+    #   #     min_playing_time: 60,
+    #   #     max_playing_time: 120,
+    #   #     playing_time: 120,
+    #   #     rating: 7.1234,
+    #   #     complexity: 2.3456,
+    #   #     user_ratings_count: 50000,
+    #   #     categories: ["Economic", "Negotiation"],
+    #   #     mechanics: ["Dice Rolling", "Trading"]
+    #   #   },
+    #   #   ...
+    #   # ]
+    def get_details(ids, options = {})
+      ids = Array(ids)
+      raise ArgumentError, "ids cannot be empty" if ids.empty?
+      raise ArgumentError, "can only fetch up to 20 items at once" if ids.count > 20
+
+      min_ratings = options[:min_user_ratings] || 10_000
+
+      params = { id: ids.join(","), stats: 1 }
+      response = get("thing", params)
+      parse_thing_response(response, min_ratings)
+    rescue Faraday::TimeoutError, Faraday::ConnectionFailed, Timeout::Error => e
+      raise TimeoutError, "Request to BGG API timed out: #{e.message}"
+    rescue Faraday::Error => e
+      if e.message.include?("execution expired") || e.message.include?("timeout")
+        raise TimeoutError, "Request to BGG API timed out: #{e.message}"
+      end
+      raise ApiError, "BGG API request failed: #{e.message}"
+    rescue REXML::ParseException => e
+      raise ParseError, "Failed to parse BGG API response: #{e.message}"
+    end
+
     private
 
     def connection
@@ -109,7 +160,7 @@ module BggApi
         name_element = item.elements["name"]
         year_element = item.elements["yearpublished"]
 
-        # Only include items with primary name type
+        # Only include items with a primary name type
         name_type = name_element&.attributes&.[]("type")
         next unless name_type == "primary"
 
@@ -120,6 +171,125 @@ module BggApi
           year_published: year_element&.attributes&.[]("value")
         }.compact
       end.compact
+    end
+
+    def parse_thing_response(xml_string, min_ratings)
+      doc = REXML::Document.new(xml_string)
+      root = doc.root
+
+      raise ParseError, "Invalid XML response structure" unless root&.name == "items"
+
+      root.elements.map do |item|
+        next unless item.name == "item"
+
+        # Filter by user ratings count
+        user_ratings_count = extract_user_ratings_count(item)
+        next if user_ratings_count < min_ratings
+
+        parse_thing_item(item)
+      end.compact
+    end
+
+    def extract_user_ratings_count(item)
+      statistics = item.elements["statistics"]
+      return 0 unless statistics
+
+      ratings = statistics.elements["ratings"]
+      return 0 unless ratings
+
+      usersrated = ratings.elements["usersrated"]
+      return 0 unless usersrated
+
+      usersrated.attributes["value"].to_i
+    end
+
+    def parse_thing_item(item)
+      {
+        id: item.attributes["id"].to_i,
+        type: item.attributes["type"],
+        name: extract_primary_name(item),
+        year_published: extract_year_published(item),
+        min_players: extract_attribute(item, "minplayers"),
+        max_players: extract_attribute(item, "maxplayers"),
+        min_playing_time: extract_attribute(item, "minplaytime"),
+        max_playing_time: extract_attribute(item, "maxplaytime"),
+        playing_time: extract_attribute(item, "playingtime"),
+        rating: extract_rating(item),
+        complexity: extract_complexity(item),
+        user_ratings_count: extract_user_ratings_count(item),
+        categories: extract_links(item, "boardgamecategory"),
+        mechanics: extract_links(item, "boardgamemechanic"),
+        parent_game_ids: extract_parent_game_ids(item)
+      }.compact
+    end
+
+    def extract_primary_name(item)
+      item.elements.each("name") do |name|
+        return name.attributes["value"] if name.attributes["type"] == "primary"
+      end
+      nil
+    end
+
+    def extract_year_published(item)
+      year_element = item.elements["yearpublished"]
+      year_element&.attributes&.[]("value")&.to_i
+    end
+
+    def extract_attribute(item, attr_name)
+      element = item.elements[attr_name]
+      return nil unless element
+
+      value = element.attributes["value"]
+      value&.to_i
+    end
+
+    def extract_rating(item)
+      statistics = item.elements["statistics"]
+      return nil unless statistics
+
+      ratings = statistics.elements["ratings"]
+      return nil unless ratings
+
+      average = ratings.elements["average"]
+      return nil unless average
+
+      value = average.attributes["value"]
+      value&.to_f&.round(2)
+    end
+
+    def extract_complexity(item)
+      statistics = item.elements["statistics"]
+      return nil unless statistics
+
+      ratings = statistics.elements["ratings"]
+      return nil unless ratings
+
+      averageweight = ratings.elements["averageweight"]
+      return nil unless averageweight
+
+      value = averageweight.attributes["value"]
+      value&.to_f&.round(2)
+    end
+
+    def extract_links(item, link_type)
+      links = []
+      item.elements.each("link") do |link|
+        if link.attributes["type"] == link_type
+          links << link.attributes["value"]
+        end
+      end
+      links
+    end
+
+    def extract_parent_game_ids(item)
+      parent_ids = []
+      item.elements.each("link") do |link|
+        # Look for expansion links with inbound="true"
+        if link.attributes["type"] == "boardgameexpansion" && link.attributes["inbound"] == "true"
+          parent_ids << link.attributes["id"].to_i
+        end
+      end
+      parent_ids
     end
   end
 end

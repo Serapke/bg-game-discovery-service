@@ -171,6 +171,11 @@ class Api::V1::BoardGamesControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "should return empty results for non-matching search" do
+    # Stub BGG API to return empty results
+    stub_request(:get, "https://boardgamegeek.com/xmlapi2/search").
+      with(query: hash_including(query: "nonexistentgame")).
+      to_return(status: 200, body: '<?xml version="1.0" encoding="utf-8"?><items total="0"></items>', headers: {})
+
     get search_api_v1_board_games_url, params: { name: "nonexistentgame" }
     assert_response :success
 
