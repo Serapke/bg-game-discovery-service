@@ -1,4 +1,5 @@
 require "test_helper"
+require "webmock/minitest"
 
 class Api::V1::BoardGamesControllerTest < ActionDispatch::IntegrationTest
   setup do

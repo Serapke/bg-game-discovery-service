@@ -1,6 +1,4 @@
 class Api::V1::BoardGamesController < ApplicationController
-  before_action :set_board_game, only: [:show]
-
   def index
     ids = parse_ids if params.key?(:ids)
 
@@ -14,7 +12,10 @@ class Api::V1::BoardGamesController < ApplicationController
   end
 
   def show
-    render json: ::BoardGames::Serializer.serialize(@board_game)
+    board_game = BoardGame.includes(:extensions, :game_types, :game_categories).find(params[:id])
+    render json: ::BoardGames::Serializer.serialize(board_game)
+  rescue ActiveRecord::RecordNotFound
+    render json: { error: 'Board game not found' }, status: :not_found
   end
 
   def search
@@ -25,12 +26,6 @@ class Api::V1::BoardGamesController < ApplicationController
   end
 
   private
-
-  def set_board_game
-    @board_game = BoardGame.includes(:extensions, :game_types, :game_categories).find(params[:id])
-  rescue ActiveRecord::RecordNotFound
-    render json: { error: 'Board game not found' }, status: :not_found
-  end
 
   def parse_ids
     params[:ids].to_s.split(',').map(&:to_i).reject(&:zero?)
