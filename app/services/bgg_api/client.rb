@@ -69,7 +69,8 @@ module BggApi
     #   # => [
     #   #   {
     #   #     id: 13,
-    #   #     type: "boardgame",
+    #   #     thing_type: "boardgame",
+    #   #     types: ["strategy", "family"],
     #   #     name: "Catan",
     #   #     year_published: 1995,
     #   #     min_players: 3,
@@ -206,7 +207,8 @@ module BggApi
     def parse_thing_item(item)
       {
         id: item.attributes["id"].to_i,
-        type: item.attributes["type"],
+        thing_type: item.attributes["type"],
+        types: extract_game_types(item),
         name: extract_primary_name(item),
         year_published: extract_year_published(item),
         min_players: extract_attribute(item, "minplayers"),
@@ -290,6 +292,52 @@ module BggApi
         end
       end
       parent_ids
+    end
+
+    def extract_game_types(item)
+      statistics = item.elements["statistics"]
+      return [] unless statistics
+
+      ratings = statistics.elements["ratings"]
+      return [] unless ratings
+
+      ranks = ratings.elements["ranks"]
+      return [] unless ranks
+
+      types = []
+      ranks.elements.each("rank") do |rank|
+        # Look for ranks with type="family" to determine game types
+        if rank.attributes["type"] == "family"
+          rank_name = rank.attributes["name"]
+          types << map_rank_name_to_game_type(rank_name) if rank_name
+        end
+      end
+
+      types.compact.uniq
+    end
+
+    def map_rank_name_to_game_type(rank_name)
+      # Map BGG rank names to game types (abstract, family, party, strategy, thematic)
+      mapped_type = case rank_name.downcase
+      when /abstracts/
+        "abstract"
+      when /familygames/
+        "family"
+      when /partygames/
+        "party"
+      when /strategygames/
+        "strategy"
+      when /thematic/
+        "thematic"
+      else
+        nil
+      end
+
+      if mapped_type.nil?
+        Rails.logger.warn("Unrecognized BGG rank name for game type mapping: #{rank_name}")
+      end
+
+      mapped_type
     end
   end
 end

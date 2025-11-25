@@ -86,13 +86,13 @@ module BggApi
     end
 
     def perform_import(game_data, dry_run:)
-      case game_data[:type]
+      case game_data[:thing_type]
       when "boardgame"
         import_board_game(game_data, dry_run: dry_run)
       when "boardgameexpansion"
         import_extension(game_data, dry_run: dry_run)
       else
-        raise ImportError, "Unknown game type: #{game_data[:type]}"
+        raise ImportError, "Unknown game type: #{game_data[:thing_type]}"
       end
     end
 
@@ -113,7 +113,7 @@ module BggApi
       )
 
       # Assign game types and categories
-      board_game.game_types = find_or_create_game_types(game_data[:mechanics], dry_run: dry_run)
+      board_game.game_types = find_or_create_game_types(game_data[:types], dry_run: dry_run)
       board_game.game_categories = find_or_create_game_categories(game_data[:categories], dry_run: dry_run)
 
       return board_game if dry_run
@@ -178,11 +178,11 @@ module BggApi
       nil
     end
 
-    def find_or_create_game_types(mechanics, dry_run:)
-      return [find_or_create_default_game_type(dry_run: dry_run)] if mechanics.blank?
+    def find_or_create_game_types(types, dry_run:)
+      return [find_or_create_default_game_type(dry_run: dry_run)] if types.blank?
 
-      mechanics.map do |mechanic|
-        dry_run ? GameType.new(name: mechanic) : GameType.find_or_create_by!(name: mechanic)
+      types.map do |type|
+        dry_run ? GameType.new(name: type) : GameType.find_or_create_by!(name: type)
       end
     end
 

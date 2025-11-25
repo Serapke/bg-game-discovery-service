@@ -279,7 +279,7 @@ module BggApi
       game = result.first
 
       assert_equal 13, game[:id]
-      assert_equal "boardgame", game[:type]
+      assert_equal "boardgame", game[:thing_type]
       assert_equal "Catan", game[:name]
       assert_equal 1995, game[:year_published]
       assert_equal 3, game[:min_players]
@@ -428,7 +428,7 @@ module BggApi
       expansion = result.first
 
       assert_equal 12345, expansion[:id]
-      assert_equal "boardgameexpansion", expansion[:type]
+      assert_equal "boardgameexpansion", expansion[:thing_type]
       assert_equal "Catan: Seafarers", expansion[:name]
       assert_equal [13], expansion[:parent_game_ids]
     end
@@ -552,6 +552,125 @@ module BggApi
       assert_nil game[:max_players]
       assert_equal [], game[:categories]
       assert_equal [], game[:mechanics]
+    end
+
+    test "get_details extracts game types from family ranks" do
+      xml_response = <<~XML
+        <?xml version="1.0" encoding="utf-8"?>
+        <items termsofuse="https://boardgamegeek.com/xmlapi/termsofuse">
+          <item type="boardgame" id="13">
+            <name type="primary" value="Catan"/>
+            <yearpublished value="1995"/>
+            <minplayers value="3"/>
+            <maxplayers value="4"/>
+            <minplaytime value="60"/>
+            <maxplaytime value="120"/>
+            <playingtime value="120"/>
+            <statistics page="1">
+              <ratings>
+                <usersrated value="50000"/>
+                <average value="7.12"/>
+                <averageweight value="2.35"/>
+                <ranks>
+                  <rank type="subtype" id="1" name="boardgame" friendlyname="Board Game Rank" value="331" bayesaverage="7.09"/>
+                  <rank type="family" id="5497" name="strategygames" friendlyname="Strategy Game Rank" value="123" bayesaverage="7.15"/>
+                  <rank type="family" id="5499" name="familygames" friendlyname="Family Game Rank" value="45" bayesaverage="7.20"/>
+                </ranks>
+              </ratings>
+            </statistics>
+          </item>
+        </items>
+      XML
+
+      stub_request(:get, "#{@base_url}/thing")
+        .with(query: { id: "13", stats: 1 })
+        .to_return(status: 200, body: xml_response)
+
+      result = @client.get_details(13)
+
+      assert_equal 1, result.length
+      game = result.first
+
+      assert_equal ["strategy", "family"], game[:types]
+    end
+
+    test "get_details handles all game type mappings" do
+      xml_response = <<~XML
+        <?xml version="1.0" encoding="utf-8"?>
+        <items termsofuse="https://boardgamegeek.com/xmlapi/termsofuse">
+          <item type="boardgame" id="99999">
+            <name type="primary" value="Multi-Type Game"/>
+            <yearpublished value="2020"/>
+            <minplayers value="2"/>
+            <maxplayers value="6"/>
+            <minplaytime value="30"/>
+            <maxplaytime value="60"/>
+            <playingtime value="45"/>
+            <statistics page="1">
+              <ratings>
+                <usersrated value="10000"/>
+                <average value="7.0"/>
+                <averageweight value="2.0"/>
+                <ranks>
+                  <rank type="subtype" id="1" name="boardgame" friendlyname="Board Game Rank" value="500" bayesaverage="6.95"/>
+                  <rank type="family" id="5498" name="abstracts" friendlyname="Abstract Game Rank" value="50" bayesaverage="7.00"/>
+                  <rank type="family" id="5500" name="partygames" friendlyname="Party Game Rank" value="25" bayesaverage="7.10"/>
+                  <rank type="family" id="5501" name="thematic" friendlyname="Thematic Rank" value="75" bayesaverage="6.90"/>
+                </ranks>
+              </ratings>
+            </statistics>
+          </item>
+        </items>
+      XML
+
+      stub_request(:get, "#{@base_url}/thing")
+        .with(query: { id: "99999", stats: 1 })
+        .to_return(status: 200, body: xml_response)
+
+      result = @client.get_details(99999)
+
+      assert_equal 1, result.length
+      game = result.first
+
+      assert_equal ["abstract", "party", "thematic"], game[:types]
+    end
+
+    test "get_details returns empty types array when no family ranks present" do
+      xml_response = <<~XML
+        <?xml version="1.0" encoding="utf-8"?>
+        <items termsofuse="https://boardgamegeek.com/xmlapi/termsofuse">
+          <item type="boardgame" id="12345">
+            <name type="primary" value="Game Without Family Ranks"/>
+            <yearpublished value="2020"/>
+            <minplayers value="2"/>
+            <maxplayers value="4"/>
+            <minplaytime value="30"/>
+            <maxplaytime value="60"/>
+            <playingtime value="45"/>
+            <statistics page="1">
+              <ratings>
+                <usersrated value="10000"/>
+                <average value="6.5"/>
+                <averageweight value="1.5"/>
+                <ranks>
+                  <rank type="subtype" id="1" name="boardgame" friendlyname="Board Game Rank" value="1000" bayesaverage="6.50"/>
+                </ranks>
+              </ratings>
+            </statistics>
+          </item>
+        </items>
+      XML
+
+      stub_request(:get, "#{@base_url}/thing")
+        .with(query: { id: "12345", stats: 1 })
+        .to_return(status: 200, body: xml_response)
+
+      result = @client.get_details(12345)
+
+      assert_equal 1, result.length
+      game = result.first
+
+      assert_equal [], game[:types]
     end
   end
 end

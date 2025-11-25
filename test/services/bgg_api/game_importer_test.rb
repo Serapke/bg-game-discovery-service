@@ -25,7 +25,7 @@ module BggApi
       game_details = [
         {
           id: 13,
-          type: "boardgame",
+          thing_type: "boardgame",
           name: "Catan",
           year_published: 1995,
           min_players: 3,
@@ -41,7 +41,7 @@ module BggApi
         },
         {
           id: 2807,
-          type: "boardgame",
+          thing_type: "boardgame",
           name: "Pandemic",
           year_published: 2008,
           min_players: 2,
@@ -79,7 +79,7 @@ module BggApi
 
       game_details = [{
         id: 13,
-        type: "boardgame",
+        thing_type: "boardgame",
         name: "Catan",
         year_published: 1995,
         min_players: 3,
@@ -136,7 +136,7 @@ module BggApi
       game_details = (1..20).map do |i|
         {
           id: i,
-          type: "boardgame",
+          thing_type: "boardgame",
           name: "Game #{i}",
           year_published: 2020,
           min_players: 2,
@@ -169,7 +169,7 @@ module BggApi
 
       game_details = [{
         id: 13,
-        type: "boardgame",
+        thing_type: "boardgame",
         name: "Catan",
         year_published: 1995,
         min_players: 3,
@@ -216,7 +216,7 @@ module BggApi
     test "import_by_id imports a single board game" do
       game_details = [{
         id: 13,
-        type: "boardgame",
+        thing_type: "boardgame",
         name: "Catan",
         year_published: 1995,
         min_players: 3,
@@ -255,7 +255,7 @@ module BggApi
     test "import_by_id with dry_run does not persist" do
       game_details = [{
         id: 13,
-        type: "boardgame",
+        thing_type: "boardgame",
         name: "Catan",
         year_published: 1995,
         min_players: 3,
@@ -300,7 +300,7 @@ module BggApi
     test "import creates board game with all attributes" do
       game_data = {
         id: 13,
-        type: "boardgame",
+        thing_type: "boardgame",
         name: "Catan",
         year_published: 1995,
         min_players: 3,
@@ -347,7 +347,7 @@ module BggApi
     test "import creates default game type and category when empty" do
       game_data = {
         id: 13,
-        type: "boardgame",
+        thing_type: "boardgame",
         name: "Test Game",
         year_published: 2020,
         min_players: 2,
@@ -378,7 +378,7 @@ module BggApi
     test "import does not create duplicate when already imported" do
       game_data = {
         id: 13,
-        type: "boardgame",
+        thing_type: "boardgame",
         name: "Catan",
         year_published: 1995,
         min_players: 3,
@@ -426,7 +426,7 @@ module BggApi
 
       extension_data = {
         id: 12345,
-        type: "boardgameexpansion",
+        thing_type: "boardgameexpansion",
         name: "Catan: Seafarers",
         year_published: 1997,
         min_players: 3,
@@ -462,7 +462,7 @@ module BggApi
     test "import skips extension when parent game not found" do
       extension_data = {
         id: 12345,
-        type: "boardgameexpansion",
+        thing_type: "boardgameexpansion",
         name: "Catan: Seafarers",
         year_published: 1997,
         min_players: 3,
@@ -490,7 +490,7 @@ module BggApi
     test "import raises error for extension without parent game IDs" do
       extension_data = {
         id: 12345,
-        type: "boardgameexpansion",
+        thing_type: "boardgameexpansion",
         name: "Orphan Extension",
         year_published: 2020,
         min_players: 2,
@@ -518,7 +518,7 @@ module BggApi
     test "import raises error for unknown game type" do
       unknown_data = {
         id: 99999,
-        type: "unknowntype",
+        thing_type: "unknowntype",
         name: "Unknown Type",
         year_published: 2020,
         min_players: 2,
