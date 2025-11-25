@@ -49,4 +49,5 @@ Rails.application.configure do
 
   # Disable host checking in development for app helper
   config.hosts << "www.example.com"
+  config.hosts << "host.docker.internal"
 end
