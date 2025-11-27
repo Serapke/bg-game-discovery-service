@@ -36,7 +36,7 @@ module BggApi
           rating: 7.12,
           complexity: 2.35,
           user_ratings_count: 50000,
-          categories: ["Economic", "Negotiation"],
+          categories: %w[Economic Negotiation],
           mechanics: ["Dice Rolling", "Trading"]
         },
         {
@@ -301,6 +301,7 @@ module BggApi
       game_data = {
         id: 13,
         thing_type: "boardgame",
+        types: %w[strategy family],
         name: "Catan",
         year_published: 1995,
         min_players: 3,
@@ -311,7 +312,7 @@ module BggApi
         rating: 7.12,
         complexity: 2.35,
         user_ratings_count: 50000,
-        categories: ["Economic", "Negotiation"],
+        categories: %w[Economic Negotiation],
         mechanics: ["Dice Rolling", "Trading"]
       }
 
@@ -334,8 +335,8 @@ module BggApi
       assert_includes imported.game_categories.map(&:name), "Negotiation"
 
       assert_equal 2, imported.game_types.count
-      assert_includes imported.game_types.map(&:name), "Dice Rolling"
-      assert_includes imported.game_types.map(&:name), "Trading"
+      assert_includes imported.game_types.map(&:name), "strategy"
+      assert_includes imported.game_types.map(&:name), "family"
 
       # Check BGG association
       assert_not_nil imported.bgg_board_game_association
