@@ -119,6 +119,174 @@
           ]
         },
         {
+          "name": "Filter Board Games",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/board_games?ids=&player_count=&max_playing_time=&game_types=&min_rating=",
+              "host": ["{{base_url}}"],
+              "path": ["api", "v1", "board_games"],
+              "query": [
+                {
+                  "key": "ids",
+                  "value": "",
+                  "description": "Comma-separated list of board game IDs to filter from"
+                },
+                {
+                  "key": "player_count",
+                  "value": "",
+                  "description": "Exact number of players the game must support"
+                },
+                {
+                  "key": "max_playing_time",
+                  "value": "",
+                  "description": "Maximum playing time in minutes"
+                },
+                {
+                  "key": "game_types",
+                  "value": "",
+                  "description": "Comma-separated game types (strategy, family, party, abstract, thematic)"
+                },
+                {
+                  "key": "min_rating",
+                  "value": "",
+                  "description": "Minimum rating threshold (0-10)"
+                }
+              ]
+            },
+            "description": "Filter board games using various criteria. All parameters are optional and can be combined. Can filter all games or a specific subset by providing IDs."
+          },
+          "response": [
+            {
+              "name": "Filter by Player Count",
+              "originalRequest": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{base_url}}/api/v1/board_games?player_count=4",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "board_games"],
+                  "query": [
+                    {
+                      "key": "player_count",
+                      "value": "4"
+                    }
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"board_games\": [\n    {\n      \"id\": 1,\n      \"name\": \"Catan\",\n      \"game_types\": [\"strategy\", \"family\"],\n      \"game_categories\": [\"Economic\", \"Negotiation\"],\n      \"min_players\": 3,\n      \"max_players\": 4,\n      \"min_playing_time\": 60,\n      \"max_playing_time\": 90,\n      \"rating\": \"7.2\",\n      \"difficulty_score\": \"2.5\",\n      \"extensions\": []\n    }\n  ],\n  \"total\": 1\n}"
+            },
+            {
+              "name": "Filter by Game Types",
+              "originalRequest": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{base_url}}/api/v1/board_games?game_types=strategy",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "board_games"],
+                  "query": [
+                    {
+                      "key": "game_types",
+                      "value": "strategy"
+                    }
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"board_games\": [\n    {\n      \"id\": 1,\n      \"name\": \"Catan\",\n      \"game_types\": [\"strategy\", \"family\"],\n      \"game_categories\": [\"Economic\", \"Negotiation\"],\n      \"min_players\": 3,\n      \"max_players\": 4,\n      \"min_playing_time\": 60,\n      \"max_playing_time\": 90,\n      \"rating\": \"7.2\",\n      \"difficulty_score\": \"2.5\",\n      \"extensions\": []\n    }\n  ],\n  \"total\": 1\n}"
+            },
+            {
+              "name": "Filter by Max Playing Time",
+              "originalRequest": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{base_url}}/api/v1/board_games?max_playing_time=60",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "board_games"],
+                  "query": [
+                    {
+                      "key": "max_playing_time",
+                      "value": "60"
+                    }
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"board_games\": [\n    {\n      \"id\": 4,\n      \"name\": \"Azul\",\n      \"game_types\": [\"abstract\", \"family\"],\n      \"game_categories\": [\"Ancient\"],\n      \"min_players\": 2,\n      \"max_players\": 4,\n      \"min_playing_time\": 30,\n      \"max_playing_time\": 45,\n      \"rating\": \"7.8\",\n      \"difficulty_score\": \"2.0\",\n      \"extensions\": []\n    }\n  ],\n  \"total\": 1\n}"
+            },
+            {
+              "name": "Filter by Minimum Rating",
+              "originalRequest": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{base_url}}/api/v1/board_games?min_rating=7.5",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "board_games"],
+                  "query": [
+                    {
+                      "key": "min_rating",
+                      "value": "7.5"
+                    }
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"board_games\": [\n    {\n      \"id\": 3,\n      \"name\": \"Wingspan\",\n      \"game_types\": [\"strategy\"],\n      \"game_categories\": [\"Card Game\"],\n      \"min_players\": 1,\n      \"max_players\": 5,\n      \"min_playing_time\": 40,\n      \"max_playing_time\": 70,\n      \"rating\": \"8.1\",\n      \"difficulty_score\": \"2.5\",\n      \"extensions\": []\n    }\n  ],\n  \"total\": 1\n}"
+            },
+            {
+              "name": "Multiple Filters with IDs",
+              "originalRequest": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{base_url}}/api/v1/board_games?ids=1,2,3,4&player_count=4&max_playing_time=120&game_types=strategy,family&min_rating=7.0",
+                  "host": ["{{base_url}}"],
+                  "path": ["api", "v1", "board_games"],
+                  "query": [
+                    {
+                      "key": "ids",
+                      "value": "1,2,3,4"
+                    },
+                    {
+                      "key": "player_count",
+                      "value": "4"
+                    },
+                    {
+                      "key": "max_playing_time",
+                      "value": "120"
+                    },
+                    {
+                      "key": "game_types",
+                      "value": "strategy,family"
+                    },
+                    {
+                      "key": "min_rating",
+                      "value": "7.0"
+                    }
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"board_games\": [\n    {\n      \"id\": 1,\n      \"name\": \"Catan\",\n      \"game_types\": [\"strategy\", \"family\"],\n      \"game_categories\": [\"Economic\", \"Negotiation\"],\n      \"min_players\": 3,\n      \"max_players\": 4,\n      \"min_playing_time\": 60,\n      \"max_playing_time\": 90,\n      \"rating\": \"7.2\",\n      \"difficulty_score\": \"2.5\",\n      \"extensions\": []\n    }\n  ],\n  \"total\": 1\n}"
+            }
+          ]
+        },
+        {
           "name": "Get Board Game by ID",
           "request": {
             "method": "GET",

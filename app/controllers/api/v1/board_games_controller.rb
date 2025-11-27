@@ -7,7 +7,13 @@ class Api::V1::BoardGamesController < ApplicationController
       return
     end
 
-    board_games = ::BoardGames::FetchQuery.new.call(ids: ids)
+    board_games = ::BoardGames::FetchQuery.new.call(
+      ids: ids,
+      player_count: params[:player_count],
+      max_playing_time: params[:max_playing_time],
+      game_types: parse_game_types,
+      min_rating: params[:min_rating]
+    )
     render json: ::BoardGames::Serializer.serialize_collection(board_games)
   end
 
@@ -29,5 +35,10 @@ class Api::V1::BoardGamesController < ApplicationController
 
   def parse_ids
     params[:ids].to_s.split(',').map(&:to_i).reject(&:zero?)
+  end
+
+  def parse_game_types
+    return nil unless params[:game_types].present?
+    params[:game_types].to_s.split(',').map(&:strip).reject(&:blank?)
   end
 end

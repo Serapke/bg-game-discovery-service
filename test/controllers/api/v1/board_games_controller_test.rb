@@ -293,4 +293,140 @@ class Api::V1::BoardGamesControllerTest < ActionDispatch::IntegrationTest
       end
     end
   end
+
+  # Index filter tests
+
+  test "should filter index by player count" do
+    board_game1 = board_games(:catan)
+    board_game2 = board_games(:wingspan)
+
+    get api_v1_board_games_url, params: {
+      ids: "#{board_game1.id},#{board_game2.id}",
+      player_count: 4
+    }
+    assert_response :success
+
+    json_response = JSON.parse(response.body)
+    board_games = json_response["board_games"]
+
+    board_games.each do |game|
+      assert game["min_players"] <= 4
+      assert game["max_players"] >= 4
+    end
+  end
+
+  test "should filter index by max playing time" do
+    board_game1 = board_games(:catan)
+    board_game2 = board_games(:wingspan)
+
+    get api_v1_board_games_url, params: {
+      ids: "#{board_game1.id},#{board_game2.id}",
+      max_playing_time: 60
+    }
+    assert_response :success
+
+    json_response = JSON.parse(response.body)
+    board_games = json_response["board_games"]
+
+    board_games.each do |game|
+      assert game["max_playing_time"] <= 60
+    end
+  end
+
+  test "should filter index by game types" do
+    strategy_type = game_types(:strategy)
+
+    get api_v1_board_games_url, params: {
+      game_types: strategy_type.name
+    }
+    assert_response :success
+
+    json_response = JSON.parse(response.body)
+    board_games = json_response["board_games"]
+
+    board_games.each do |game|
+      assert_includes game["game_types"], strategy_type.name
+    end
+  end
+
+  test "should filter index by multiple game types" do
+    strategy_type = game_types(:strategy)
+    family_type = game_types(:family)
+
+    get api_v1_board_games_url, params: {
+      game_types: "#{strategy_type.name},#{family_type.name}"
+    }
+    assert_response :success
+
+    json_response = JSON.parse(response.body)
+    board_games = json_response["board_games"]
+
+    board_games.each do |game|
+      assert(
+        game["game_types"].include?(strategy_type.name) ||
+        game["game_types"].include?(family_type.name),
+        "Game should include at least one of the specified types"
+      )
+    end
+  end
+
+  test "should filter index by minimum rating" do
+    get api_v1_board_games_url, params: { min_rating: 7.0 }
+    assert_response :success
+
+    json_response = JSON.parse(response.body)
+    board_games = json_response["board_games"]
+
+    board_games.each do |game|
+      assert game["rating"].to_f >= 7.0
+    end
+  end
+
+  test "should apply multiple filters on index" do
+    strategy_type = game_types(:strategy)
+
+    get api_v1_board_games_url, params: {
+      player_count: 4,
+      max_playing_time: 120,
+      game_types: strategy_type.name,
+      min_rating: 7.0
+    }
+    assert_response :success
+
+    json_response = JSON.parse(response.body)
+    board_games = json_response["board_games"]
+
+    board_games.each do |game|
+      assert game["min_players"] <= 4
+      assert game["max_players"] >= 4
+      assert game["max_playing_time"] <= 120
+      assert_includes game["game_types"], strategy_type.name
+      assert game["rating"].to_f >= 7.0
+    end
+  end
+
+  test "should apply filters with IDs on index" do
+    board_game1 = board_games(:catan)
+    board_game2 = board_games(:wingspan)
+    strategy_type = game_types(:strategy)
+
+    get api_v1_board_games_url, params: {
+      ids: "#{board_game1.id},#{board_game2.id}",
+      player_count: 4,
+      game_types: strategy_type.name
+    }
+    assert_response :success
+
+    json_response = JSON.parse(response.body)
+    board_games = json_response["board_games"]
+
+    game_ids = board_games.map { |g| g["id"] }
+    assert game_ids.all? { |id| [board_game1.id, board_game2.id].include?(id) }
+
+    board_games.each do |game|
+      assert game["min_players"] <= 4
+      assert game["max_players"] >= 4
+      assert_includes game["game_types"], strategy_type.name
+    end
+  end
 end

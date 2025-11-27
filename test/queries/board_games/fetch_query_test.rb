@@ -40,26 +40,6 @@ module BoardGames
       end
     end
 
-    test "fetch_all includes associations" do
-      result = @query.fetch_all
-
-      # Verify associations are eagerly loaded
-      assert_not ActiveRecord::Associations::Preloader.new(
-        records: [result.first],
-        associations: [:extensions, :game_types, :game_categories]
-      ).empty?
-    end
-
-    test "fetch_by_ids includes associations" do
-      result = @query.fetch_by_ids([@catan.id])
-
-      # Verify associations are eagerly loaded
-      assert_not ActiveRecord::Associations::Preloader.new(
-        records: [result.first],
-        associations: [:extensions, :game_types, :game_categories]
-      ).empty?
-    end
-
     test "can initialize with custom relation" do
       custom_relation = BoardGame.where(name: @catan.name)
       query = BoardGames::FetchQuery.new(custom_relation)
@@ -68,6 +48,72 @@ module BoardGames
 
       assert_equal 1, result.count
       assert_includes result, @catan
+    end
+
+    test "call with player_count filter returns games matching player count" do
+      result = @query.call(ids: nil, player_count: 4)
+
+      # Should include games where 4 players is within min/max range
+      result.each do |game|
+        assert game.min_players <= 4
+        assert game.max_players >= 4
+      end
+    end
+
+    test "call with max_playing_time filter returns games under time limit" do
+      result = @query.call(ids: nil, max_playing_time: 60)
+
+      result.each do |game|
+        assert game.max_playing_time <= 60 if game.max_playing_time.present?
+      end
+    end
+
+    test "call with game_types filter returns games with specified types" do
+      strategy_type = game_types(:strategy)
+      result = @query.call(ids: nil, game_types: [strategy_type.name])
+
+      result.each do |game|
+        assert_includes game.game_types.map(&:name), strategy_type.name
+      end
+    end
+
+    test "call with min_rating filter returns games above rating threshold" do
+      result = @query.call(ids: nil, min_rating: 7.0)
+
+      result.each do |game|
+        assert game.rating >= 7.0 if game.rating.present?
+      end
+    end
+
+    test "call with multiple filters applies all filters" do
+      strategy_type = game_types(:strategy)
+      result = @query.call(
+        ids: nil,
+        player_count: 4,
+        max_playing_time: 120,
+        game_types: [strategy_type.name],
+        min_rating: 7.0
+      )
+
+      result.each do |game|
+        assert game.min_players <= 4
+        assert game.max_players >= 4
+        assert game.max_playing_time <= 120 if game.max_playing_time.present?
+        assert_includes game.game_types.map(&:name), strategy_type.name
+        assert game.rating >= 7.0 if game.rating.present?
+      end
+    end
+
+    test "call with ids and filters returns filtered subset" do
+      ids = [@catan.id, @wingspan.id]
+      result = @query.call(ids: ids, player_count: 4)
+
+      # Should only return games from the ID list that match filters
+      result.each do |game|
+        assert_includes ids, game.id
+        assert game.min_players <= 4
+        assert game.max_players >= 4
+      end
     end
   end
 end

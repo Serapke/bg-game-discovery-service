@@ -18,16 +18,22 @@ class BoardGame < ApplicationRecord
 
   scope :search_by_name, ->(name) { where("name ILIKE ?", "%#{name}%") if name.present? }
   scope :for_player_count, ->(player_count) {
-    where("min_players <= ? AND max_players >= ?", player_count, player_count) if player_count.present?
+    where("board_games.min_players <= ? AND board_games.max_players >= ?", player_count, player_count) if player_count.present?
   }
   scope :for_playing_time, ->(playing_time) {
-    where("min_playing_time <= ? AND max_playing_time >= ?", playing_time, playing_time) if playing_time.present?
+    where("board_games.min_playing_time <= ? AND board_games.max_playing_time >= ?", playing_time, playing_time) if playing_time.present?
   }
   scope :max_playing_time_under, ->(max_time) {
-    where("max_playing_time <= ?", max_time) if max_time.present?
+    where("board_games.max_playing_time <= ?", max_time) if max_time.present?
   }
   scope :min_playing_time_over, ->(min_time) {
-    where("min_playing_time >= ?", min_time) if min_time.present?
+    where("board_games.min_playing_time >= ?", min_time) if min_time.present?
+  }
+  scope :with_game_types, ->(types) {
+    joins(:game_types).where(game_types: { name: types }).distinct if types.present?
+  }
+  scope :with_min_rating, ->(min_rating) {
+    where("board_games.rating >= ?", min_rating) if min_rating.present?
   }
 
   private
