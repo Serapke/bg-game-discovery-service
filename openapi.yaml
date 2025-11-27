@@ -1,0 +1,403 @@
+openapi: 3.0.3
+info:
+  title: Game Discovery API
+  description: API for discovering board games and their extensions with BGG integration
+  version: 1.0.0
+  contact:
+    name: API Support
+servers:
+  - url: http://localhost:3002
+    description: Development server
+  - url: https://api.gamediscovery.example.com
+    description: Production server
+
+paths:
+  /api/v1/board_games:
+    get:
+      summary: Get or filter board games
+      description: Retrieve all board games or filter by specific criteria. Can optionally filter a subset by providing IDs.
+      operationId: getBoardGames
+      tags:
+        - Board Games
+      parameters:
+        - name: ids
+          in: query
+          description: Comma-separated list of board game IDs to filter from
+          required: false
+          schema:
+            type: string
+            example: "1,2,3"
+        - name: player_count
+          in: query
+          description: Exact number of players the game must support
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            example: 4
+        - name: max_playing_time
+          in: query
+          description: Maximum playing time in minutes
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            example: 60
+        - name: game_types
+          in: query
+          description: Comma-separated game types to filter by
+          required: false
+          schema:
+            type: string
+            example: "strategy,family"
+          style: form
+          explode: false
+        - name: min_rating
+          in: query
+          description: Minimum rating threshold (0-10)
+          required: false
+          schema:
+            type: number
+            format: float
+            minimum: 0
+            maximum: 10
+            example: 7.0
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  board_games:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/BoardGame'
+                  total:
+                    type: integer
+                    example: 2
+              examples:
+                all_games:
+                  summary: All board games
+                  value:
+                    board_games:
+                      - id: 1
+                        name: Catan
+                        game_types: [strategy, family]
+                        game_categories: [Economic, Negotiation]
+                        min_players: 3
+                        max_players: 4
+                        min_playing_time: 60
+                        max_playing_time: 90
+                        rating: "7.2"
+                        difficulty_score: "2.5"
+                        extensions: []
+                    total: 1
+                filtered:
+                  summary: Filtered by player count and rating
+                  value:
+                    board_games:
+                      - id: 1
+                        name: Catan
+                        game_types: [strategy, family]
+                        game_categories: [Economic, Negotiation]
+                        min_players: 3
+                        max_players: 4
+                        min_playing_time: 60
+                        max_playing_time: 90
+                        rating: "7.2"
+                        difficulty_score: "2.5"
+                        extensions: []
+                    total: 1
+        '400':
+          description: Bad request - Invalid IDs provided
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: "No valid IDs provided"
+
+  /api/v1/board_games/{id}:
+    get:
+      summary: Get board game by ID
+      description: Retrieve a specific board game by its ID, including all extensions
+      operationId: getBoardGameById
+      tags:
+        - Board Games
+      parameters:
+        - name: id
+          in: path
+          description: Board game ID
+          required: true
+          schema:
+            type: integer
+            example: 1
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BoardGameDetailed'
+              example:
+                id: 1
+                name: Catan
+                game_types: [strategy, family]
+                game_categories: [Economic, Negotiation]
+                min_players: 3
+                max_players: 4
+                min_playing_time: 60
+                max_playing_time: 90
+                rating: "7.2"
+                difficulty_score: "2.5"
+                extensions:
+                  - id: 1
+                    name: "Catan: Seafarers"
+                    min_players: 3
+                    max_players: 4
+                    min_playing_time: 60
+                    max_playing_time: 90
+                    rating: "7.1"
+                    difficulty_score: "2.6"
+        '404':
+          description: Board game not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: "Board game not found"
+
+  /api/v1/board_games/search:
+    get:
+      summary: Search board games
+      description: Search for board games by name and other criteria. Automatically imports from BGG if no local results found.
+      operationId: searchBoardGames
+      tags:
+        - Board Games
+      parameters:
+        - name: name
+          in: query
+          description: Search for board games containing this name (case insensitive)
+          required: false
+          schema:
+            type: string
+            example: "catan"
+        - name: player_count
+          in: query
+          description: Find games that support this exact number of players
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            example: 3
+        - name: playing_time
+          in: query
+          description: Find games that can be played in this exact time (minutes)
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            example: 60
+        - name: min_playing_time
+          in: query
+          description: Find games with minimum playing time over this limit
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            example: 30
+        - name: max_playing_time
+          in: query
+          description: Find games with maximum playing time under this limit
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            example: 90
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  board_games:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/BoardGame'
+                  total:
+                    type: integer
+              examples:
+                by_name:
+                  summary: Search by name
+                  value:
+                    board_games:
+                      - id: 1
+                        name: Catan
+                        game_types: [strategy, family]
+                        game_categories: [Economic, Negotiation]
+                        min_players: 3
+                        max_players: 4
+                        min_playing_time: 60
+                        max_playing_time: 90
+                        rating: "7.2"
+                        difficulty_score: "2.5"
+                        extensions: []
+                    total: 1
+                empty:
+                  summary: No results
+                  value:
+                    board_games: []
+                    total: 0
+        '400':
+          description: Bad request - Empty name parameter
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: "Name parameter cannot be empty"
+
+  /up:
+    get:
+      summary: Health check
+      description: Check if the application is running and healthy
+      operationId: healthCheck
+      tags:
+        - Health
+      responses:
+        '200':
+          description: Application is healthy
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: "Rails application is running"
+
+components:
+  schemas:
+    BoardGame:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: "Catan"
+        game_types:
+          type: array
+          items:
+            type: string
+          example: [strategy, family]
+          description: Game types (strategy, family, party, abstract, thematic)
+        game_categories:
+          type: array
+          items:
+            type: string
+          example: [Economic, Negotiation]
+        min_players:
+          type: integer
+          minimum: 1
+          example: 3
+        max_players:
+          type: integer
+          minimum: 1
+          example: 4
+        min_playing_time:
+          type: integer
+          nullable: true
+          minimum: 1
+          example: 60
+        max_playing_time:
+          type: integer
+          nullable: true
+          minimum: 1
+          example: 90
+        rating:
+          type: string
+          nullable: true
+          example: "7.2"
+          description: Rating as a decimal string (0-10)
+        difficulty_score:
+          type: string
+          nullable: true
+          example: "2.5"
+          description: Difficulty score as a decimal string (0-5)
+        extensions:
+          type: array
+          items:
+            $ref: '#/components/schemas/Extension'
+      required:
+        - id
+        - name
+        - game_types
+        - game_categories
+        - min_players
+        - max_players
+        - extensions
+
+    BoardGameDetailed:
+      allOf:
+        - $ref: '#/components/schemas/BoardGame'
+      description: Board game with full extension details
+
+    Extension:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: "Catan: Seafarers"
+        min_players:
+          type: integer
+          minimum: 1
+          example: 3
+        max_players:
+          type: integer
+          minimum: 1
+          example: 4
+        min_playing_time:
+          type: integer
+          nullable: true
+          minimum: 1
+          example: 60
+        max_playing_time:
+          type: integer
+          nullable: true
+          minimum: 1
+          example: 90
+        rating:
+          type: string
+          nullable: true
+          example: "7.1"
+        difficulty_score:
+          type: string
+          nullable: true
+          example: "2.6"
+      required:
+        - id
+        - name
+        - min_players
+        - max_players
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          example: "Board game not found"
+      required:
+        - error
+
+tags:
+  - name: Board Games
+    description: Operations for managing and searching board games
+  - name: Health
+    description: Health check endpoints
