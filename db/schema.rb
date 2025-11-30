@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_11_30_153640) do
+ActiveRecord::Schema[8.0].define(version: 2025_11_30_161353) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -69,8 +69,10 @@ ActiveRecord::Schema[8.0].define(version: 2025_11_30_153640) do
   create_table "board_games_game_types", id: false, force: :cascade do |t|
     t.bigint "board_game_id", null: false
     t.bigint "game_type_id", null: false
+    t.integer "rank"
     t.index ["board_game_id", "game_type_id"], name: "index_board_games_game_types_on_board_game_id_and_game_type_id"
     t.index ["game_type_id", "board_game_id"], name: "index_board_games_game_types_on_game_type_id_and_board_game_id"
+    t.check_constraint "rank > 0", name: "board_games_game_types_rank_check"
   end
 
   create_table "extensions", id: :serial, force: :cascade do |t|

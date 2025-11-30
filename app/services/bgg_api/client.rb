@@ -309,11 +309,18 @@ module BggApi
         # Look for ranks with type="family" to determine game types
         if rank.attributes["type"] == "family"
           rank_name = rank.attributes["name"]
-          types << map_rank_name_to_game_type(rank_name) if rank_name
+          rank_value = rank.attributes["value"]
+
+          mapped_type = map_rank_name_to_game_type(rank_name) if rank_name
+          if mapped_type
+            # Store both the type name and rank value
+            rank_int = rank_value&.to_i
+            types << { name: mapped_type, rank: rank_int }
+          end
         end
       end
 
-      types.compact.uniq
+      types.compact
     end
 
     def map_rank_name_to_game_type(rank_name)

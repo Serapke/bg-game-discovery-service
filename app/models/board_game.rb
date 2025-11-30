@@ -1,5 +1,6 @@
 class BoardGame < ApplicationRecord
-  has_and_belongs_to_many :game_types
+  has_many :board_game_game_types, dependent: :destroy
+  has_many :game_types, through: :board_game_game_types
   has_and_belongs_to_many :game_categories
   has_many :extensions, dependent: :destroy
   has_one :bgg_board_game_association, dependent: :destroy

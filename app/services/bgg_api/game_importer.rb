@@ -113,9 +113,11 @@ module BggApi
         difficulty_score: game_data[:complexity]
       )
 
-      # Assign game types and categories
-      board_game.game_types = find_or_create_game_types(game_data[:types], dry_run: dry_run)
+      # Assign game categories
       board_game.game_categories = find_or_create_game_categories(game_data[:categories], dry_run: dry_run)
+
+      # Assign game types with ranks
+      assign_game_types_with_ranks(board_game, game_data[:types], dry_run: dry_run)
 
       return board_game if dry_run
 
@@ -178,6 +180,35 @@ module BggApi
         return association.board_game if association
       end
       nil
+    end
+
+    def assign_game_types_with_ranks(board_game, types_data, dry_run:)
+      # types_data is now an array of hashes: [{name: "strategy", rank: 123}, ...]
+      if types_data.blank?
+        default_type = dry_run ? GameType.new(name: "General") : GameType.find_or_create_by!(name: "General")
+        board_game.game_types = [default_type]
+        return
+      end
+
+      if dry_run
+        # For dry_run, just assign unsaved GameType instances
+        board_game.game_types = types_data.map { |type_info| GameType.new(name: type_info[:name]) }
+      else
+        # Find or create all game types and build join records with ranks
+        game_types_with_ranks = types_data.map do |type_info|
+          game_type = GameType.find_or_create_by!(name: type_info[:name])
+          { game_type: game_type, rank: type_info[:rank] }
+        end
+
+        # Assign game types to satisfy validation
+        board_game.game_types = game_types_with_ranks.map { |gt| gt[:game_type] }
+
+        # Then update the join records with rank values
+        game_types_with_ranks.each do |gt_info|
+          join_record = board_game.board_game_game_types.find { |bgt| bgt.game_type_id == gt_info[:game_type].id }
+          join_record.rank = gt_info[:rank] if join_record
+        end
+      end
     end
 
     def find_or_create_game_types(types, dry_run:)

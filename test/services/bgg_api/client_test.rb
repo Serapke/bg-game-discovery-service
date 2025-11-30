@@ -591,7 +591,7 @@ module BggApi
       assert_equal 1, result.length
       game = result.first
 
-      assert_equal ["strategy", "family"], game[:types]
+      assert_equal [{ name: "strategy", rank: 123 }, { name: "family", rank: 45 }], game[:types]
     end
 
     test "get_details handles all game type mappings" do
@@ -632,7 +632,7 @@ module BggApi
       assert_equal 1, result.length
       game = result.first
 
-      assert_equal ["abstract", "party", "thematic"], game[:types]
+      assert_equal [{ name: "abstract", rank: 50 }, { name: "party", rank: 25 }, { name: "thematic", rank: 75 }], game[:types]
     end
 
     test "get_details returns empty types array when no family ranks present" do
