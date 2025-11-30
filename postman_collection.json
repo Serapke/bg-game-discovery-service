@@ -45,7 +45,7 @@
               "status": "OK",
               "code": 200,
               "_postman_previewlanguage": "json",
-              "body": "{\n  \"board_games\": [\n    {\n      \"id\": 1,\n      \"name\": \"Catan\",\n      \"game_types\": [\"strategy\", \"family\"],\n      \"game_categories\": [\"Economic\", \"Negotiation\"],\n      \"min_players\": 3,\n      \"max_players\": 4,\n      \"min_playing_time\": 60,\n      \"max_playing_time\": 90,\n      \"rating\": \"7.2\",\n      \"difficulty_score\": \"2.5\",\n      \"extensions\": [\n        {\n          \"id\": 1,\n          \"name\": \"Catan: Seafarers\",\n          \"min_players\": 3,\n          \"max_players\": 4,\n          \"min_playing_time\": 60,\n          \"max_playing_time\": 90,\n          \"rating\": \"7.1\",\n          \"difficulty_score\": \"2.6\"\n        }\n      ]\n    }\n  ],\n  \"total\": 4\n}"
+              "body": "{\n  \"board_games\": [\n    {\n      \"id\": 1,\n      \"name\": \"Catan\",\n      \"game_types\": [\"strategy\", \"family\"],\n      \"game_categories\": [\"Economic\", \"Negotiation\"],\n      \"min_players\": 3,\n      \"max_players\": 4,\n      \"min_playing_time\": 60,\n      \"max_playing_time\": 90,\n      \"rating\": \"7.2\",\n      \"rating_count\": 50000,\n      \"difficulty_score\": \"2.5\",\n      \"extensions\": [\n        {\n          \"id\": 1,\n          \"name\": \"Catan: Seafarers\",\n          \"min_players\": 3,\n          \"max_players\": 4,\n          \"min_playing_time\": 60,\n          \"max_playing_time\": 90,\n          \"rating\": \"7.1\",\n          \"rating_count\": 15000,\n          \"difficulty_score\": \"2.6\"\n        }\n      ]\n    }\n  ],\n  \"total\": 4\n}"
             }
           ]
         },
@@ -93,7 +93,7 @@
               "status": "OK",
               "code": 200,
               "_postman_previewlanguage": "json",
-              "body": "{\n  \"board_games\": [\n    {\n      \"id\": 1,\n      \"name\": \"Catan\",\n      \"game_types\": [\"strategy\", \"family\"],\n      \"game_categories\": [\"Economic\", \"Negotiation\"],\n      \"min_players\": 3,\n      \"max_players\": 4,\n      \"min_playing_time\": 60,\n      \"max_playing_time\": 90,\n      \"rating\": \"7.2\",\n      \"difficulty_score\": \"2.5\",\n      \"extensions\": []\n    },\n    {\n      \"id\": 2,\n      \"name\": \"Wingspan\",\n      \"game_types\": [\"strategy\"],\n      \"game_categories\": [\"Card Game\"],\n      \"min_players\": 1,\n      \"max_players\": 5,\n      \"min_playing_time\": 40,\n      \"max_playing_time\": 70,\n      \"rating\": \"8.1\",\n      \"difficulty_score\": \"2.5\",\n      \"extensions\": []\n    }\n  ],\n  \"total\": 2\n}"
+              "body": "{\n  \"board_games\": [\n    {\n      \"id\": 1,\n      \"name\": \"Catan\",\n      \"game_types\": [\"strategy\", \"family\"],\n      \"game_categories\": [\"Economic\", \"Negotiation\"],\n      \"min_players\": 3,\n      \"max_players\": 4,\n      \"min_playing_time\": 60,\n      \"max_playing_time\": 90,\n      \"rating\": \"7.2\",\n      \"rating_count\": 50000,\n      \"difficulty_score\": \"2.5\",\n      \"extensions\": []\n    },\n    {\n      \"id\": 2,\n      \"name\": \"Wingspan\",\n      \"game_types\": [\"strategy\"],\n      \"game_categories\": [\"Card Game\"],\n      \"min_players\": 1,\n      \"max_players\": 5,\n      \"min_playing_time\": 40,\n      \"max_playing_time\": 70,\n      \"rating\": \"8.1\",\n      \"rating_count\": 25000,\n      \"difficulty_score\": \"2.5\",\n      \"extensions\": []\n    }\n  ],\n  \"total\": 2\n}"
             },
             {
               "name": "Invalid IDs Error",
@@ -182,7 +182,7 @@
               "status": "OK",
               "code": 200,
               "_postman_previewlanguage": "json",
-              "body": "{\n  \"board_games\": [\n    {\n      \"id\": 1,\n      \"name\": \"Catan\",\n      \"game_types\": [\"strategy\", \"family\"],\n      \"game_categories\": [\"Economic\", \"Negotiation\"],\n      \"min_players\": 3,\n      \"max_players\": 4,\n      \"min_playing_time\": 60,\n      \"max_playing_time\": 90,\n      \"rating\": \"7.2\",\n      \"difficulty_score\": \"2.5\",\n      \"extensions\": []\n    }\n  ],\n  \"total\": 1\n}"
+              "body": "{\n  \"board_games\": [\n    {\n      \"id\": 1,\n      \"name\": \"Catan\",\n      \"game_types\": [\"strategy\", \"family\"],\n      \"game_categories\": [\"Economic\", \"Negotiation\"],\n      \"min_players\": 3,\n      \"max_players\": 4,\n      \"min_playing_time\": 60,\n      \"max_playing_time\": 90,\n      \"rating\": \"7.2\",\n      \"rating_count\": 50000,\n      \"difficulty_score\": \"2.5\",\n      \"extensions\": []\n    }\n  ],\n  \"total\": 1\n}"
             },
             {
               "name": "Filter by Game Types",
@@ -203,7 +203,7 @@
               "status": "OK",
               "code": 200,
               "_postman_previewlanguage": "json",
-              "body": "{\n  \"board_games\": [\n    {\n      \"id\": 1,\n      \"name\": \"Catan\",\n      \"game_types\": [\"strategy\", \"family\"],\n      \"game_categories\": [\"Economic\", \"Negotiation\"],\n      \"min_players\": 3,\n      \"max_players\": 4,\n      \"min_playing_time\": 60,\n      \"max_playing_time\": 90,\n      \"rating\": \"7.2\",\n      \"difficulty_score\": \"2.5\",\n      \"extensions\": []\n    }\n  ],\n  \"total\": 1\n}"
+              "body": "{\n  \"board_games\": [\n    {\n      \"id\": 1,\n      \"name\": \"Catan\",\n      \"game_types\": [\"strategy\", \"family\"],\n      \"game_categories\": [\"Economic\", \"Negotiation\"],\n      \"min_players\": 3,\n      \"max_players\": 4,\n      \"min_playing_time\": 60,\n      \"max_playing_time\": 90,\n      \"rating\": \"7.2\",\n      \"rating_count\": 50000,\n      \"difficulty_score\": \"2.5\",\n      \"extensions\": []\n    }\n  ],\n  \"total\": 1\n}"
             },
             {
               "name": "Filter by Max Playing Time",
@@ -224,7 +224,7 @@
               "status": "OK",
               "code": 200,
               "_postman_previewlanguage": "json",
-              "body": "{\n  \"board_games\": [\n    {\n      \"id\": 4,\n      \"name\": \"Azul\",\n      \"game_types\": [\"abstract\", \"family\"],\n      \"game_categories\": [\"Ancient\"],\n      \"min_players\": 2,\n      \"max_players\": 4,\n      \"min_playing_time\": 30,\n      \"max_playing_time\": 45,\n      \"rating\": \"7.8\",\n      \"difficulty_score\": \"2.0\",\n      \"extensions\": []\n    }\n  ],\n  \"total\": 1\n}"
+              "body": "{\n  \"board_games\": [\n    {\n      \"id\": 4,\n      \"name\": \"Azul\",\n      \"game_types\": [\"abstract\", \"family\"],\n      \"game_categories\": [\"Ancient\"],\n      \"min_players\": 2,\n      \"max_players\": 4,\n      \"min_playing_time\": 30,\n      \"max_playing_time\": 45,\n      \"rating\": \"7.8\",\n      \"rating_count\": 40000,\n      \"difficulty_score\": \"2.0\",\n      \"extensions\": []\n    }\n  ],\n  \"total\": 1\n}"
             },
             {
               "name": "Filter by Minimum Rating",
@@ -245,7 +245,7 @@
               "status": "OK",
               "code": 200,
               "_postman_previewlanguage": "json",
-              "body": "{\n  \"board_games\": [\n    {\n      \"id\": 3,\n      \"name\": \"Wingspan\",\n      \"game_types\": [\"strategy\"],\n      \"game_categories\": [\"Card Game\"],\n      \"min_players\": 1,\n      \"max_players\": 5,\n      \"min_playing_time\": 40,\n      \"max_playing_time\": 70,\n      \"rating\": \"8.1\",\n      \"difficulty_score\": \"2.5\",\n      \"extensions\": []\n    }\n  ],\n  \"total\": 1\n}"
+              "body": "{\n  \"board_games\": [\n    {\n      \"id\": 3,\n      \"name\": \"Wingspan\",\n      \"game_types\": [\"strategy\"],\n      \"game_categories\": [\"Card Game\"],\n      \"min_players\": 1,\n      \"max_players\": 5,\n      \"min_playing_time\": 40,\n      \"max_playing_time\": 70,\n      \"rating\": \"8.1\",\n      \"rating_count\": 25000,\n      \"difficulty_score\": \"2.5\",\n      \"extensions\": []\n    }\n  ],\n  \"total\": 1\n}"
             },
             {
               "name": "Multiple Filters with IDs",
@@ -282,7 +282,7 @@
               "status": "OK",
               "code": 200,
               "_postman_previewlanguage": "json",
-              "body": "{\n  \"board_games\": [\n    {\n      \"id\": 1,\n      \"name\": \"Catan\",\n      \"game_types\": [\"strategy\", \"family\"],\n      \"game_categories\": [\"Economic\", \"Negotiation\"],\n      \"min_players\": 3,\n      \"max_players\": 4,\n      \"min_playing_time\": 60,\n      \"max_playing_time\": 90,\n      \"rating\": \"7.2\",\n      \"difficulty_score\": \"2.5\",\n      \"extensions\": []\n    }\n  ],\n  \"total\": 1\n}"
+              "body": "{\n  \"board_games\": [\n    {\n      \"id\": 1,\n      \"name\": \"Catan\",\n      \"game_types\": [\"strategy\", \"family\"],\n      \"game_categories\": [\"Economic\", \"Negotiation\"],\n      \"min_players\": 3,\n      \"max_players\": 4,\n      \"min_playing_time\": 60,\n      \"max_playing_time\": 90,\n      \"rating\": \"7.2\",\n      \"rating_count\": 50000,\n      \"difficulty_score\": \"2.5\",\n      \"extensions\": []\n    }\n  ],\n  \"total\": 1\n}"
             }
           ]
         },
@@ -317,7 +317,7 @@
               "status": "OK",
               "code": 200,
               "_postman_previewlanguage": "json",
-              "body": "{\n  \"id\": 1,\n  \"name\": \"Catan\",\n  \"game_types\": [\"strategy\", \"family\"],\n  \"game_categories\": [\"Economic\", \"Negotiation\"],\n  \"min_players\": 3,\n  \"max_players\": 4,\n  \"min_playing_time\": 60,\n  \"max_playing_time\": 90,\n  \"rating\": \"7.2\",\n  \"difficulty_score\": \"2.5\",\n  \"extensions\": [\n    {\n      \"id\": 1,\n      \"name\": \"Catan: Seafarers\",\n      \"min_players\": 3,\n      \"max_players\": 4,\n      \"min_playing_time\": 60,\n      \"max_playing_time\": 90,\n      \"rating\": \"7.1\",\n      \"difficulty_score\": \"2.6\"\n    }\n  ]\n}"
+              "body": "{\n  \"id\": 1,\n  \"name\": \"Catan\",\n  \"game_types\": [\"strategy\", \"family\"],\n  \"game_categories\": [\"Economic\", \"Negotiation\"],\n  \"min_players\": 3,\n  \"max_players\": 4,\n  \"min_playing_time\": 60,\n  \"max_playing_time\": 90,\n  \"rating\": \"7.2\",\n  \"rating_count\": 50000,\n  \"difficulty_score\": \"2.5\",\n  \"extensions\": [\n    {\n      \"id\": 1,\n      \"name\": \"Catan: Seafarers\",\n      \"min_players\": 3,\n      \"max_players\": 4,\n      \"min_playing_time\": 60,\n      \"max_playing_time\": 90,\n      \"rating\": \"7.1\",\n      \"rating_count\": 15000,\n      \"difficulty_score\": \"2.6\"\n    }\n  ]\n}"
             },
             {
               "name": "Not Found Error",
@@ -394,166 +394,7 @@
               "status": "OK",
               "code": 200,
               "_postman_previewlanguage": "json",
-              "body": "{\n  \"board_games\": [\n    {\n      \"id\": 1,\n      \"name\": \"Catan\",\n      \"game_types\": [\"strategy\", \"family\"],\n      \"game_categories\": [\"Economic\", \"Negotiation\"],\n      \"min_players\": 3,\n      \"max_players\": 4,\n      \"min_playing_time\": 60,\n      \"max_playing_time\": 90,\n      \"rating\": \"7.2\",\n      \"difficulty_score\": \"2.5\",\n      \"extensions\": []\n    }\n  ],\n  \"total\": 4\n}"
-            },
-            {
-              "name": "Search by Name",
-              "originalRequest": {
-                "method": "GET",
-                "url": {
-                  "raw": "{{base_url}}/api/v1/board_games/search?name=catan",
-                  "host": ["{{base_url}}"],
-                  "path": ["api", "v1", "board_games", "search"],
-                  "query": [
-                    {
-                      "key": "name",
-                      "value": "catan"
-                    }
-                  ]
-                }
-              },
-              "status": "OK",
-              "code": 200,
-              "_postman_previewlanguage": "json",
-              "body": "{\n  \"board_games\": [\n    {\n      \"id\": 1,\n      \"name\": \"Catan\",\n      \"game_types\": [\"strategy\", \"family\"],\n      \"game_categories\": [\"Economic\", \"Negotiation\"],\n      \"min_players\": 3,\n      \"max_players\": 4,\n      \"min_playing_time\": 60,\n      \"max_playing_time\": 90,\n      \"rating\": \"7.2\",\n      \"difficulty_score\": \"2.5\",\n      \"extensions\": []\n    }\n  ],\n  \"total\": 1\n}"
-            },
-            {
-              "name": "Search by Player Count",
-              "originalRequest": {
-                "method": "GET",
-                "url": {
-                  "raw": "{{base_url}}/api/v1/board_games/search?player_count=3",
-                  "host": ["{{base_url}}"],
-                  "path": ["api", "v1", "board_games", "search"],
-                  "query": [
-                    {
-                      "key": "player_count",
-                      "value": "3"
-                    }
-                  ]
-                }
-              },
-              "status": "OK",
-              "code": 200,
-              "_postman_previewlanguage": "json",
-              "body": "{\n  \"board_games\": [\n    {\n      \"id\": 1,\n      \"name\": \"Catan\",\n      \"game_types\": [\"strategy\", \"family\"],\n      \"game_categories\": [\"Economic\", \"Negotiation\"],\n      \"min_players\": 3,\n      \"max_players\": 4,\n      \"min_playing_time\": 60,\n      \"max_playing_time\": 90,\n      \"rating\": \"7.2\",\n      \"difficulty_score\": \"2.5\",\n      \"extensions\": []\n    }\n  ],\n  \"total\": 2\n}"
-            },
-            {
-              "name": "Search by Playing Time",
-              "originalRequest": {
-                "method": "GET",
-                "url": {
-                  "raw": "{{base_url}}/api/v1/board_games/search?playing_time=60",
-                  "host": ["{{base_url}}"],
-                  "path": ["api", "v1", "board_games", "search"],
-                  "query": [
-                    {
-                      "key": "playing_time",
-                      "value": "60"
-                    }
-                  ]
-                }
-              },
-              "status": "OK",
-              "code": 200,
-              "_postman_previewlanguage": "json",
-              "body": "{\n  \"board_games\": [\n    {\n      \"id\": 1,\n      \"name\": \"Catan\",\n      \"game_types\": [\"strategy\", \"family\"],\n      \"game_categories\": [\"Economic\", \"Negotiation\"],\n      \"min_players\": 3,\n      \"max_players\": 4,\n      \"min_playing_time\": 60,\n      \"max_playing_time\": 90,\n      \"rating\": \"7.2\",\n      \"difficulty_score\": \"2.5\",\n      \"extensions\": []\n    }\n  ],\n  \"total\": 2\n}"
-            },
-            {
-              "name": "Search by Maximum Playing Time",
-              "originalRequest": {
-                "method": "GET",
-                "url": {
-                  "raw": "{{base_url}}/api/v1/board_games/search?max_playing_time=50",
-                  "host": ["{{base_url}}"],
-                  "path": ["api", "v1", "board_games", "search"],
-                  "query": [
-                    {
-                      "key": "max_playing_time",
-                      "value": "50"
-                    }
-                  ]
-                }
-              },
-              "status": "OK",
-              "code": 200,
-              "_postman_previewlanguage": "json",
-              "body": "{\n  \"board_games\": [\n    {\n      \"id\": 4,\n      \"name\": \"Azul\",\n      \"game_types\": [\"abstract\", \"family\"],\n      \"game_categories\": [\"Ancient\"],\n      \"min_players\": 2,\n      \"max_players\": 4,\n      \"min_playing_time\": 30,\n      \"max_playing_time\": 45,\n      \"rating\": \"7.8\",\n      \"difficulty_score\": \"2.0\",\n      \"extensions\": []\n    }\n  ],\n  \"total\": 1\n}"
-            },
-            {
-              "name": "Search by Minimum Playing Time",
-              "originalRequest": {
-                "method": "GET",
-                "url": {
-                  "raw": "{{base_url}}/api/v1/board_games/search?min_playing_time=50",
-                  "host": ["{{base_url}}"],
-                  "path": ["api", "v1", "board_games", "search"],
-                  "query": [
-                    {
-                      "key": "min_playing_time",
-                      "value": "50"
-                    }
-                  ]
-                }
-              },
-              "status": "OK",
-              "code": 200,
-              "_postman_previewlanguage": "json",
-              "body": "{\n  \"board_games\": [\n    {\n      \"id\": 1,\n      \"name\": \"Catan\",\n      \"game_types\": [\"strategy\", \"family\"],\n      \"game_categories\": [\"Economic\", \"Negotiation\"],\n      \"min_players\": 3,\n      \"max_players\": 4,\n      \"min_playing_time\": 60,\n      \"max_playing_time\": 90,\n      \"rating\": \"7.2\",\n      \"difficulty_score\": \"2.5\",\n      \"extensions\": []\n    }\n  ],\n  \"total\": 1\n}"
-            },
-            {
-              "name": "Complex Search - Multiple Filters",
-              "originalRequest": {
-                "method": "GET",
-                "url": {
-                  "raw": "{{base_url}}/api/v1/board_games/search?name=wing&player_count=2&min_playing_time=30&max_playing_time=90",
-                  "host": ["{{base_url}}"],
-                  "path": ["api", "v1", "board_games", "search"],
-                  "query": [
-                    {
-                      "key": "name",
-                      "value": "wing"
-                    },
-                    {
-                      "key": "player_count",
-                      "value": "2"
-                    },
-                    {
-                      "key": "min_playing_time",
-                      "value": "30"
-                    },
-                    {
-                      "key": "max_playing_time",
-                      "value": "90"
-                    }
-                  ]
-                }
-              },
-              "status": "OK",
-              "code": 200,
-              "_postman_previewlanguage": "json",
-              "body": "{\n  \"board_games\": [\n    {\n      \"id\": 3,\n      \"name\": \"Wingspan\",\n      \"game_types\": [\"strategy\"],\n      \"game_categories\": [\"Card Game\"],\n      \"min_players\": 1,\n      \"max_players\": 5,\n      \"min_playing_time\": 40,\n      \"max_playing_time\": 70,\n      \"rating\": \"8.1\",\n      \"difficulty_score\": \"2.5\",\n      \"extensions\": []\n    }\n  ],\n  \"total\": 1\n}"
-            },
-            {
-              "name": "Empty Results",
-              "originalRequest": {
-                "method": "GET",
-                "url": {
-                  "raw": "{{base_url}}/api/v1/board_games/search?name=nonexistentgame",
-                  "host": ["{{base_url}}"],
-                  "path": ["api", "v1", "board_games", "search"],
-                  "query": [
-                    {
-                      "key": "name",
-                      "value": "nonexistentgame"
-                    }
-                  ]
-                }
-              },
-              "status": "OK",
-              "code": 200,
-              "_postman_previewlanguage": "json",
-              "body": "{\n  \"board_games\": [],\n  \"total\": 0\n}"
+              "body": "{\n  \"board_games\": [\n    {\n      \"id\": 1,\n      \"name\": \"Catan\",\n      \"game_types\": [\"strategy\", \"family\"],\n      \"game_categories\": [\"Economic\", \"Negotiation\"],\n      \"min_players\": 3,\n      \"max_players\": 4,\n      \"min_playing_time\": 60,\n      \"max_playing_time\": 90,\n      \"rating\": \"7.2\",\n      \"rating_count\": 50000,\n      \"difficulty_score\": \"2.5\",\n      \"extensions\": []\n    }\n  ],\n  \"total\": 4\n}"
             }
           ]
         }

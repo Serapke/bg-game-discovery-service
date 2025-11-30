@@ -109,6 +109,7 @@ module BggApi
         min_playing_time: game_data[:min_playing_time],
         max_playing_time: game_data[:max_playing_time],
         rating: game_data[:rating],
+        rating_count: game_data[:user_ratings_count],
         difficulty_score: game_data[:complexity]
       )
 
@@ -156,6 +157,7 @@ module BggApi
         min_playing_time: game_data[:min_playing_time],
         max_playing_time: game_data[:max_playing_time],
         rating: game_data[:rating],
+        rating_count: game_data[:user_ratings_count],
         difficulty_score: game_data[:complexity]
       )
 

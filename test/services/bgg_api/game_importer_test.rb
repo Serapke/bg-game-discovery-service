@@ -26,6 +26,7 @@ module BggApi
         {
           id: 13,
           thing_type: "boardgame",
+          types: %w[strategy family],
           name: "Catan",
           year_published: 1995,
           min_players: 3,
@@ -42,6 +43,7 @@ module BggApi
         {
           id: 2807,
           thing_type: "boardgame",
+          types: %w[strategy],
           name: "Pandemic",
           year_published: 2008,
           min_players: 2,
@@ -80,6 +82,7 @@ module BggApi
       game_details = [{
         id: 13,
         thing_type: "boardgame",
+        types: %w[strategy family],
         name: "Catan",
         year_published: 1995,
         min_players: 3,
@@ -137,6 +140,7 @@ module BggApi
         {
           id: i,
           thing_type: "boardgame",
+          types: %w[strategy],
           name: "Game #{i}",
           year_published: 2020,
           min_players: 2,
@@ -170,6 +174,7 @@ module BggApi
       game_details = [{
         id: 13,
         thing_type: "boardgame",
+        types: %w[strategy family],
         name: "Catan",
         year_published: 1995,
         min_players: 3,

@@ -6,6 +6,7 @@ catan:
   min_playing_time: 60
   max_playing_time: 90
   rating: 7.2
+  rating_count: 50000
   game_types: strategy, family
   game_categories: economic, negotiation
 
@@ -17,6 +18,7 @@ ticket_to_ride:
   min_playing_time: 30
   max_playing_time: 60
   rating: 7.4
+  rating_count: 35000
   game_types: family
   game_categories: card_game
 
@@ -28,6 +30,7 @@ wingspan:
   min_playing_time: 40
   max_playing_time: 70
   rating: 8.1
+  rating_count: 25000
   game_types: strategy
   game_categories: card_game
 
@@ -39,5 +42,6 @@ azul:
   min_playing_time: 30
   max_playing_time: 45
   rating: 7.8
+  rating_count: 40000
   game_types: abstract, family
   game_categories: ancient

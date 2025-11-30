@@ -91,6 +91,7 @@ paths:
                         min_playing_time: 60
                         max_playing_time: 90
                         rating: "7.2"
+                        rating_count: 50000
                         difficulty_score: "2.5"
                         extensions: []
                     total: 1
@@ -107,6 +108,7 @@ paths:
                         min_playing_time: 60
                         max_playing_time: 90
                         rating: "7.2"
+                        rating_count: 50000
                         difficulty_score: "2.5"
                         extensions: []
                     total: 1
@@ -151,6 +153,7 @@ paths:
                 min_playing_time: 60
                 max_playing_time: 90
                 rating: "7.2"
+                rating_count: 50000
                 difficulty_score: "2.5"
                 extensions:
                   - id: 1
@@ -160,6 +163,7 @@ paths:
                     min_playing_time: 60
                     max_playing_time: 90
                     rating: "7.1"
+                    rating_count: 15000
                     difficulty_score: "2.6"
         '404':
           description: Board game not found
@@ -245,6 +249,7 @@ paths:
                         min_playing_time: 60
                         max_playing_time: 90
                         rating: "7.2"
+                        rating_count: 50000
                         difficulty_score: "2.5"
                         extensions: []
                     total: 1
@@ -323,6 +328,11 @@ components:
           nullable: true
           example: "7.2"
           description: Rating as a decimal string (0-10)
+        rating_count:
+          type: integer
+          nullable: true
+          example: 50000
+          description: Number of ratings
         difficulty_score:
           type: string
           nullable: true
@@ -377,6 +387,11 @@ components:
           type: string
           nullable: true
           example: "7.1"
+        rating_count:
+          type: integer
+          nullable: true
+          example: 15000
+          description: Number of ratings
         difficulty_score:
           type: string
           nullable: true

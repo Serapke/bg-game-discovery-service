@@ -7,6 +7,7 @@ catan_seafarers:
   min_playing_time: 60
   max_playing_time: 90
   rating: 7.1
+  rating_count: 15000
 
 catan_cities_knights:
   name: "Catan: Cities & Knights"
@@ -17,6 +18,7 @@ catan_cities_knights:
   min_playing_time: 90
   max_playing_time: 120
   rating: 7.5
+  rating_count: 12000
 
 ticket_europe:
   name: "Ticket to Ride: Europe"
@@ -27,6 +29,7 @@ ticket_europe:
   min_playing_time: 30
   max_playing_time: 60
   rating: 7.6
+  rating_count: 20000
 
 wingspan_european:
   name: "Wingspan: European Expansion"
@@ -37,3 +40,4 @@ wingspan_european:
   min_playing_time: 40
   max_playing_time: 70
   rating: 8.2
+  rating_count: 10000

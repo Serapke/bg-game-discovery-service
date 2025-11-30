@@ -20,6 +20,7 @@ module BoardGames
         min_playing_time: board_game.min_playing_time,
         max_playing_time: board_game.max_playing_time,
         rating: board_game.rating,
+        rating_count: board_game.rating_count,
         difficulty_score: board_game.difficulty_score,
         extensions: serialize_extensions(board_game.extensions)
       }
@@ -45,6 +46,7 @@ module BoardGames
           min_playing_time: extension.min_playing_time,
           max_playing_time: extension.max_playing_time,
           rating: extension.rating,
+          rating_count: extension.rating_count,
           difficulty_score: extension.difficulty_score
         }
       end
