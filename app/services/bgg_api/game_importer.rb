@@ -13,7 +13,7 @@ module BggApi
     #
     # @param query [String] search query
     # @param options [Hash] optional parameters
-    # @option options [Integer] :min_user_ratings minimum user ratings required (default: 10000)
+    # @option options [Integer] :min_user_ratings minimum user ratings required (default: 1000)
     # @option options [Boolean] :dry_run if true, returns unsaved records without persisting (default: false)
     #
     # @return [Array<BoardGame, Extension>] imported games/extensions (persisted unless dry_run is true)
@@ -27,7 +27,7 @@ module BggApi
     #   games = importer.import_from_search("Catan", dry_run: true)
     #   # => [#<BoardGame id: nil, name: "Catan">, ...]
     def import_from_search(query, options = {})
-      min_ratings = options[:min_user_ratings] || 10_000
+      min_ratings = options[:min_user_ratings] || 1_000
       dry_run = options[:dry_run] || false
 
       # Search BGG
