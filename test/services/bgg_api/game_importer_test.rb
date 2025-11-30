@@ -58,7 +58,7 @@ module BggApi
       ]
 
       @client.expect(:search, search_results, ["Catan"])
-      @client.expect(:get_details, game_details, [[13, 2807], { min_user_ratings: 10000 }])
+      @client.expect(:get_details, game_details, [[13, 2807], { min_user_ratings: 1000 }])
 
       imported = @importer.import_from_search("Catan")
 
@@ -121,7 +121,7 @@ module BggApi
       }
 
       @client.expect(:search, search_results, ["Unpopular"])
-      @client.expect(:get_details, [], [[99999], { min_user_ratings: 10000 }])
+      @client.expect(:get_details, [], [[99999], { min_user_ratings: 1000 }])
 
       imported = @importer.import_from_search("Unpopular")
 
@@ -153,7 +153,7 @@ module BggApi
       end
 
       @client.expect(:search, search_results, ["Popular"])
-      @client.expect(:get_details, game_details, [(1..20).to_a, { min_user_ratings: 10000 }])
+      @client.expect(:get_details, game_details, [(1..20).to_a, { min_user_ratings: 1000 }])
 
       imported = @importer.import_from_search("Popular")
 
@@ -185,7 +185,7 @@ module BggApi
       }]
 
       @client.expect(:search, search_results, ["Catan"])
-      @client.expect(:get_details, game_details, [[13], { min_user_ratings: 10000 }])
+      @client.expect(:get_details, game_details, [[13], { min_user_ratings: 1000 }])
 
       initial_count = BoardGame.count
       imported = @importer.import_from_search("Catan", dry_run: true)
