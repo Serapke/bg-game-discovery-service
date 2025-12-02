@@ -221,7 +221,7 @@ module BggApi
         user_ratings_count: extract_user_ratings_count(item),
         categories: extract_links(item, "boardgamecategory"),
         mechanics: extract_links(item, "boardgamemechanic"),
-        parent_game_ids: extract_parent_game_ids(item)
+        links: extract_game_links(item)
       }.compact
     end
 
@@ -283,15 +283,40 @@ module BggApi
       links
     end
 
-    def extract_parent_game_ids(item)
-      parent_ids = []
+    def extract_game_links(item)
+      links = {
+        expands: [],            # Games this expands (inbound boardgameexpansion)
+        contains: [],           # Games this compilation contains (inbound boardgamecompilation)
+        reimplements: [],       # Games this reimplements (inbound boardgameimplementation)
+        reimplemented_by: []    # Games that reimplement this game (outbound boardgameimplementation)
+      }
+
       item.elements.each("link") do |link|
-        # Look for expansion links with inbound="true"
-        if link.attributes["type"] == "boardgameexpansion" && link.attributes["inbound"] == "true"
-          parent_ids << link.attributes["id"].to_i
+        link_type = link.attributes["type"]
+        is_inbound = link.attributes["inbound"] == "true"
+        game_id = link.attributes["id"]&.to_i
+
+        next unless game_id
+
+        case link_type
+        when "boardgameexpansion"
+          # This game expands another game (parent game ID)
+          links[:expands] << game_id if is_inbound
+        when "boardgamecompilation"
+          # This game is a big box that contains other games
+          links[:contains] << game_id if is_inbound
+        when "boardgameimplementation"
+          if is_inbound
+            # This game reimplements another game
+            links[:reimplements] << game_id
+          else
+            # This game is reimplemented by another game
+            links[:reimplemented_by] << game_id
+          end
         end
       end
-      parent_ids
+
+      links
     end
 
     def extract_game_types(item)

@@ -446,7 +446,7 @@ module BggApi
         user_ratings_count: 25000,
         categories: ["Exploration"],
         mechanics: ["Modular Board"],
-        parent_game_ids: [13]
+        links: { expands: [13], contains: [], reimplements: [], reimplemented_by: [] }
       }
 
       @client.expect(:get_details, [expansion_data], [[12345], { min_user_ratings: 0 }])
@@ -491,7 +491,7 @@ module BggApi
         user_ratings_count: 25000,
         categories: ["Exploration"],
         mechanics: [],
-        parent_game_ids: [13]  # Parent not in database
+        links: { expands: [13], contains: [], reimplements: [], reimplemented_by: [] }  # Parent not in database
       }
 
       @client.expect(:get_details, [expansion_data], [[12345], { min_user_ratings: 0 }])
@@ -526,7 +526,7 @@ module BggApi
         user_ratings_count: 10000,
         categories: ["Adventure"],
         mechanics: [],
-        parent_game_ids: []
+        links: { expands: [], contains: [], reimplements: [], reimplemented_by: [] }
       }
 
       @client.expect(:get_details, [expansion_data], [[12345], { min_user_ratings: 0 }])
@@ -538,6 +538,249 @@ module BggApi
       assert_instance_of BoardGame, imported
       assert_equal "Orphan Expansion", imported.name
       assert_equal 0, BoardGameRelation.where(source_game: imported).count
+
+      @client.verify
+    end
+
+    test "import creates compilation with contained games" do
+      # Create contained games
+      contained_game_1 = BoardGame.create!(
+        name: "Game 1",
+        year_published: 2010,
+        min_players: 2,
+        max_players: 4,
+        min_playing_time: 30,
+        max_playing_time: 60,
+        rating: 7.0,
+        difficulty_score: 2.0,
+        game_types: [GameType.find_or_create_by!(name: "General")],
+        game_categories: [GameCategory.find_or_create_by!(name: "General")]
+      )
+      contained_game_1.create_bgg_board_game_association!(bgg_id: 100)
+
+      contained_game_2 = BoardGame.create!(
+        name: "Game 2",
+        year_published: 2012,
+        min_players: 2,
+        max_players: 4,
+        min_playing_time: 45,
+        max_playing_time: 90,
+        rating: 7.5,
+        difficulty_score: 2.5,
+        game_types: [GameType.find_or_create_by!(name: "General")],
+        game_categories: [GameCategory.find_or_create_by!(name: "General")]
+      )
+      contained_game_2.create_bgg_board_game_association!(bgg_id: 200)
+
+      compilation_data = {
+        id: 54321,
+        thing_type: "boardgame",
+        types: [{ name: "strategy", rank: 50 }],
+        name: "Big Box Collection",
+        year_published: 2020,
+        min_players: 2,
+        max_players: 4,
+        min_playing_time: 30,
+        max_playing_time: 90,
+        playing_time: 60,
+        rating: 7.8,
+        complexity: 2.3,
+        user_ratings_count: 15000,
+        categories: ["Collection"],
+        mechanics: [],
+        links: { expands: [], contains: [100, 200], reimplements: [], reimplemented_by: [] }
+      }
+
+      @client.expect(:get_details, [compilation_data], [[54321], { min_user_ratings: 0 }])
+
+      imported = @importer.import_by_id(54321)
+
+      assert_not_nil imported
+      assert_instance_of BoardGame, imported
+      assert_equal "Big Box Collection", imported.name
+      assert imported.persisted?
+
+      # Check compilation relationships
+      relation_1 = BoardGameRelation.find_by(source_game: imported, target_game: contained_game_1)
+      assert_not_nil relation_1
+      assert_equal "contains", relation_1.relation_type
+
+      relation_2 = BoardGameRelation.find_by(source_game: imported, target_game: contained_game_2)
+      assert_not_nil relation_2
+      assert_equal "contains", relation_2.relation_type
+
+      # Check it appears in contained games' containers
+      assert_includes contained_game_1.containers, imported
+      assert_includes contained_game_2.containers, imported
+
+      @client.verify
+    end
+
+    test "import creates compilation without relations when contained games not found" do
+      compilation_data = {
+        id: 54321,
+        thing_type: "boardgame",
+        types: [{ name: "strategy", rank: 50 }],
+        name: "Big Box Collection",
+        year_published: 2020,
+        min_players: 2,
+        max_players: 4,
+        min_playing_time: 30,
+        max_playing_time: 90,
+        playing_time: 60,
+        rating: 7.8,
+        complexity: 2.3,
+        user_ratings_count: 15000,
+        categories: ["Collection"],
+        mechanics: [],
+        links: { expands: [], contains: [100, 200], reimplements: [], reimplemented_by: [] }  # Games not in database
+      }
+
+      @client.expect(:get_details, [compilation_data], [[54321], { min_user_ratings: 0 }])
+
+      imported = @importer.import_by_id(54321)
+
+      # Compilation is still imported, just without relations
+      assert_not_nil imported
+      assert_instance_of BoardGame, imported
+      assert_equal "Big Box Collection", imported.name
+
+      # No relations were created
+      assert_equal 0, BoardGameRelation.where(source_game: imported, relation_type: "contains").count
+
+      @client.verify
+    end
+
+    test "import creates reimplementation with reimplemented games" do
+      # Create original game
+      original_game = BoardGame.create!(
+        name: "Carcassonne",
+        year_published: 2000,
+        min_players: 2,
+        max_players: 5,
+        min_playing_time: 30,
+        max_playing_time: 45,
+        rating: 7.4,
+        difficulty_score: 1.9,
+        game_types: [GameType.find_or_create_by!(name: "General")],
+        game_categories: [GameCategory.find_or_create_by!(name: "General")]
+      )
+      original_game.create_bgg_board_game_association!(bgg_id: 822)
+
+      reimplementation_data = {
+        id: 230914,
+        thing_type: "boardgame",
+        types: [{ name: "family", rank: 75 }],
+        name: "Carcassonne Big Box 6",
+        year_published: 2017,
+        min_players: 2,
+        max_players: 5,
+        min_playing_time: 30,
+        max_playing_time: 45,
+        playing_time: 45,
+        rating: 7.5,
+        complexity: 1.9,
+        user_ratings_count: 5000,
+        categories: ["Medieval"],
+        mechanics: ["Tile Placement"],
+        links: { expands: [], contains: [], reimplements: [822], reimplemented_by: [] }
+      }
+
+      @client.expect(:get_details, [reimplementation_data], [[230914], { min_user_ratings: 0 }])
+
+      imported = @importer.import_by_id(230914)
+
+      assert_not_nil imported
+      assert_instance_of BoardGame, imported
+      assert_equal "Carcassonne Big Box 6", imported.name
+      assert imported.persisted?
+
+      # Check reimplementation relationship
+      relation = BoardGameRelation.find_by(source_game: imported, target_game: original_game)
+      assert_not_nil relation
+      assert_equal "reimplements", relation.relation_type
+
+      # Check it appears in original's reimplementations
+      assert_includes original_game.reimplementations, imported
+
+      # Check original appears in reimplementation's reimplemented_games
+      assert_includes imported.reimplemented_games, original_game
+
+      @client.verify
+    end
+
+    test "import creates game with reimplemented_by links" do
+      # Create reimplementation games
+      reimplementation_1 = BoardGame.create!(
+        name: "Carcassonne Big Box 6",
+        year_published: 2017,
+        min_players: 2,
+        max_players: 5,
+        min_playing_time: 30,
+        max_playing_time: 45,
+        rating: 7.5,
+        difficulty_score: 1.9,
+        game_types: [GameType.find_or_create_by!(name: "General")],
+        game_categories: [GameCategory.find_or_create_by!(name: "General")]
+      )
+      reimplementation_1.create_bgg_board_game_association!(bgg_id: 230914)
+
+      reimplementation_2 = BoardGame.create!(
+        name: "Carcassonne Big Box 7",
+        year_published: 2020,
+        min_players: 2,
+        max_players: 5,
+        min_playing_time: 30,
+        max_playing_time: 45,
+        rating: 7.6,
+        difficulty_score: 1.9,
+        game_types: [GameType.find_or_create_by!(name: "General")],
+        game_categories: [GameCategory.find_or_create_by!(name: "General")]
+      )
+      reimplementation_2.create_bgg_board_game_association!(bgg_id: 364405)
+
+      original_data = {
+        id: 822,
+        thing_type: "boardgame",
+        types: [{ name: "family", rank: 50 }],
+        name: "Carcassonne",
+        year_published: 2000,
+        min_players: 2,
+        max_players: 5,
+        min_playing_time: 30,
+        max_playing_time: 45,
+        playing_time: 45,
+        rating: 7.4,
+        complexity: 1.9,
+        user_ratings_count: 75000,
+        categories: ["Medieval"],
+        mechanics: ["Tile Placement"],
+        links: { expands: [], contains: [], reimplements: [], reimplemented_by: [230914, 364405] }
+      }
+
+      @client.expect(:get_details, [original_data], [[822], { min_user_ratings: 0 }])
+
+      imported = @importer.import_by_id(822)
+
+      assert_not_nil imported
+      assert_instance_of BoardGame, imported
+      assert_equal "Carcassonne", imported.name
+      assert imported.persisted?
+
+      # Check reversed reimplementation relationships were created correctly
+      relation_1 = BoardGameRelation.find_by(source_game: reimplementation_1, target_game: imported)
+      assert_not_nil relation_1
+      assert_equal "reimplements", relation_1.relation_type
+
+      relation_2 = BoardGameRelation.find_by(source_game: reimplementation_2, target_game: imported)
+      assert_not_nil relation_2
+      assert_equal "reimplements", relation_2.relation_type
+
+      # Check bidirectional relationships work
+      assert_includes imported.reimplementations, reimplementation_1
+      assert_includes imported.reimplementations, reimplementation_2
+      assert_includes reimplementation_1.reimplemented_games, imported
+      assert_includes reimplementation_2.reimplemented_games, imported
 
       @client.verify
     end

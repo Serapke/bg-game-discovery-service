@@ -430,7 +430,138 @@ module BggApi
       assert_equal 12345, expansion[:id]
       assert_equal "boardgameexpansion", expansion[:thing_type]
       assert_equal "Catan: Seafarers", expansion[:name]
-      assert_equal [13], expansion[:parent_game_ids]
+      assert_equal [13], expansion[:links][:expands]
+      assert_equal [], expansion[:links][:contains]
+      assert_equal [], expansion[:links][:reimplements]
+      assert_equal [], expansion[:links][:reimplemented_by]
+    end
+
+    test "get_details handles compilations with contained game links" do
+      xml_response = <<~XML
+        <?xml version="1.0" encoding="utf-8"?>
+        <items termsofuse="https://boardgamegeek.com/xmlapi/termsofuse">
+          <item type="boardgame" id="54321">
+            <name type="primary" value="Big Box Collection"/>
+            <yearpublished value="2020"/>
+            <minplayers value="2"/>
+            <maxplayers value="4"/>
+            <minplaytime value="30"/>
+            <maxplaytime value="90"/>
+            <playingtime value="60"/>
+            <link type="boardgamecompilation" id="100" value="Game 1" inbound="true"/>
+            <link type="boardgamecompilation" id="200" value="Game 2" inbound="true"/>
+            <statistics page="1">
+              <ratings>
+                <usersrated value="15000"/>
+                <average value="7.8"/>
+                <averageweight value="2.3"/>
+              </ratings>
+            </statistics>
+          </item>
+        </items>
+      XML
+
+      stub_request(:get, "#{@base_url}/thing")
+        .with(query: { id: "54321", stats: 1 })
+        .to_return(status: 200, body: xml_response)
+
+      result = @client.get_details(54321)
+
+      assert_equal 1, result.length
+      compilation = result.first
+
+      assert_equal 54321, compilation[:id]
+      assert_equal "boardgame", compilation[:thing_type]
+      assert_equal "Big Box Collection", compilation[:name]
+      assert_equal [], compilation[:links][:expands]
+      assert_equal [100, 200], compilation[:links][:contains]
+      assert_equal [], compilation[:links][:reimplements]
+      assert_equal [], compilation[:links][:reimplemented_by]
+    end
+
+    test "get_details handles reimplementations with reimplemented game links" do
+      xml_response = <<~XML
+        <?xml version="1.0" encoding="utf-8"?>
+        <items termsofuse="https://boardgamegeek.com/xmlapi/termsofuse">
+          <item type="boardgame" id="230914">
+            <name type="primary" value="Carcassonne Big Box 6"/>
+            <yearpublished value="2017"/>
+            <minplayers value="2"/>
+            <maxplayers value="5"/>
+            <minplaytime value="30"/>
+            <maxplaytime value="45"/>
+            <playingtime value="45"/>
+            <link type="boardgameimplementation" id="822" value="Carcassonne" inbound="true"/>
+            <statistics page="1">
+              <ratings>
+                <usersrated value="15000"/>
+                <average value="7.5"/>
+                <averageweight value="1.9"/>
+              </ratings>
+            </statistics>
+          </item>
+        </items>
+      XML
+
+      stub_request(:get, "#{@base_url}/thing")
+        .with(query: { id: "230914", stats: 1 })
+        .to_return(status: 200, body: xml_response)
+
+      result = @client.get_details(230914)
+
+      assert_equal 1, result.length
+      reimplementation = result.first
+
+      assert_equal 230914, reimplementation[:id]
+      assert_equal "boardgame", reimplementation[:thing_type]
+      assert_equal "Carcassonne Big Box 6", reimplementation[:name]
+      assert_equal [], reimplementation[:links][:expands]
+      assert_equal [], reimplementation[:links][:contains]
+      assert_equal [822], reimplementation[:links][:reimplements]
+      assert_equal [], reimplementation[:links][:reimplemented_by]
+    end
+
+    test "get_details handles games with reimplemented_by links" do
+      xml_response = <<~XML
+        <?xml version="1.0" encoding="utf-8"?>
+        <items termsofuse="https://boardgamegeek.com/xmlapi/termsofuse">
+          <item type="boardgame" id="822">
+            <name type="primary" value="Carcassonne"/>
+            <yearpublished value="2000"/>
+            <minplayers value="2"/>
+            <maxplayers value="5"/>
+            <minplaytime value="30"/>
+            <maxplaytime value="45"/>
+            <playingtime value="45"/>
+            <link type="boardgameimplementation" id="230914" value="Carcassonne Big Box 6" />
+            <link type="boardgameimplementation" id="364405" value="Carcassonne Big Box 7" />
+            <statistics page="1">
+              <ratings>
+                <usersrated value="75000"/>
+                <average value="7.4"/>
+                <averageweight value="1.9"/>
+              </ratings>
+            </statistics>
+          </item>
+        </items>
+      XML
+
+      stub_request(:get, "#{@base_url}/thing")
+        .with(query: { id: "822", stats: 1 })
+        .to_return(status: 200, body: xml_response)
+
+      result = @client.get_details(822)
+
+      assert_equal 1, result.length
+      original = result.first
+
+      assert_equal 822, original[:id]
+      assert_equal "boardgame", original[:thing_type]
+      assert_equal "Carcassonne", original[:name]
+      assert_equal [], original[:links][:expands]
+      assert_equal [], original[:links][:contains]
+      assert_equal [], original[:links][:reimplements]
+      assert_equal [230914, 364405], original[:links][:reimplemented_by]
     end
 
     test "get_details raises ArgumentError for empty IDs" do

@@ -19,6 +19,10 @@ class BoardGame < ApplicationRecord
            through: :outgoing_relations, source: :target_game
   has_many :containers, -> { where(board_game_relations: { relation_type: 'contains' }) },
            through: :incoming_relations, source: :source_game
+  has_many :reimplemented_games, -> { where(board_game_relations: { relation_type: 'reimplements' }) },
+           through: :outgoing_relations, source: :target_game
+  has_many :reimplementations, -> { where(board_game_relations: { relation_type: 'reimplements' }) },
+           through: :incoming_relations, source: :source_game
 
   validates :name, presence: true
   validates :min_players, presence: true, numericality: { greater_than: 0 }

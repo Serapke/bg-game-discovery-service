@@ -93,29 +93,20 @@ module BggApi
         raise ImportError, "Unknown game type: #{thing_type}"
       end
 
-      is_expansion = thing_type == "boardgameexpansion"
-
       # Import as a board game regardless of type
       board_game = import_board_game(game_data, dry_run: dry_run)
-      return board_game unless board_game && is_expansion && !dry_run
+      return board_game unless board_game && !dry_run
 
-      # If it's an expansion, create the 'expands' relationship(s)
-      parent_game_ids = game_data[:parent_game_ids]
-      if parent_game_ids.present?
-        found_parents, not_found_ids = find_parent_board_games(parent_game_ids)
+      # Create game relationships from BGG links
+      links = game_data[:links] || {}
+      links.each do |relation_type, target_game_ids|
+        next if target_game_ids.blank?
 
-        # Create relations for all found parent games (skip if already exists)
-        found_parents.each do |parent_board_game|
-          BoardGameRelation.find_or_create_by!(
-            source_game: board_game,
-            target_game: parent_board_game,
-            relation_type: :expands
-          )
-        end
-
-        # Log any parent games that weren't found
-        if not_found_ids.any?
-          Rails.logger.info("Expansion #{game_data[:id]} imported but parent games #{not_found_ids.join(', ')} not found in database")
+        # Handle reversed relations (where this game is the target, not the source)
+        if relation_type == :reimplemented_by
+          create_reversed_game_relations(board_game, target_game_ids, :reimplements, game_data[:id])
+        else
+          create_game_relations(board_game, target_game_ids, relation_type, game_data[:id])
         end
       end
 
@@ -155,15 +146,47 @@ module BggApi
       board_game
     end
 
-    def find_parent_board_games(parent_game_ids)
-      # Fetch all parent games in a single query
-      associations = BggBoardGameAssociation.where(bgg_id: parent_game_ids).includes(:board_game)
+    def find_board_games_by_bgg_ids(bgg_ids)
+      # Fetch all games in a single query
+      associations = BggBoardGameAssociation.where(bgg_id: bgg_ids).includes(:board_game)
 
-      found_parents = associations.map(&:board_game)
+      found_games = associations.map(&:board_game)
       found_bgg_ids = associations.map(&:bgg_id)
-      not_found_ids = parent_game_ids - found_bgg_ids
+      not_found_ids = bgg_ids - found_bgg_ids
 
-      [found_parents, not_found_ids]
+      [found_games, not_found_ids]
+    end
+
+    def create_game_relations(board_game, target_game_ids, relation_type, bgg_id)
+      found_games, not_found_ids = find_board_games_by_bgg_ids(target_game_ids)
+
+      if not_found_ids.any?
+        Rails.logger.warn("Game #{bgg_id} has '#{relation_type}' links to non-imported games: #{not_found_ids.join(', ')}")
+      end
+
+      found_games.each do |target_game|
+        BoardGameRelation.find_or_create_by!(
+          source_game: board_game,
+          target_game: target_game,
+          relation_type: relation_type
+        )
+      end
+    end
+
+    def create_reversed_game_relations(board_game, source_game_ids, relation_type, bgg_id)
+      found_games, not_found_ids = find_board_games_by_bgg_ids(source_game_ids)
+
+      if not_found_ids.any?
+        Rails.logger.warn("Game #{bgg_id} is '#{relation_type}' target for non-imported games: #{not_found_ids.join(', ')}")
+      end
+
+      found_games.each do |source_game|
+        BoardGameRelation.find_or_create_by!(
+          source_game: source_game,
+          target_game: board_game,
+          relation_type: relation_type
+        )
+      end
     end
 
     def assign_game_types_with_ranks(board_game, types_data, dry_run:)
