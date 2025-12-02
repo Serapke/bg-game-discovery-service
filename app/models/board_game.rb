@@ -2,8 +2,23 @@ class BoardGame < ApplicationRecord
   has_many :board_game_game_types, dependent: :destroy
   has_many :game_types, through: :board_game_game_types
   has_and_belongs_to_many :game_categories
-  has_many :extensions, dependent: :destroy
   has_one :bgg_board_game_association, dependent: :destroy
+
+  # Relations using board_game_relations table
+  has_many :outgoing_relations, class_name: 'BoardGameRelation',
+           foreign_key: :source_game_id, dependent: :destroy
+  has_many :incoming_relations, class_name: 'BoardGameRelation',
+           foreign_key: :target_game_id, dependent: :destroy
+
+  # Convenience methods for specific relation types
+  has_many :expansions, -> { where(board_game_relations: { relation_type: 'expands' }) },
+           through: :incoming_relations, source: :source_game
+  has_many :base_games, -> { where(board_game_relations: { relation_type: 'expands' }) },
+           through: :outgoing_relations, source: :target_game
+  has_many :contained_games, -> { where(board_game_relations: { relation_type: 'contains' }) },
+           through: :outgoing_relations, source: :target_game
+  has_many :containers, -> { where(board_game_relations: { relation_type: 'contains' }) },
+           through: :incoming_relations, source: :source_game
 
   validates :name, presence: true
   validates :min_players, presence: true, numericality: { greater_than: 0 }

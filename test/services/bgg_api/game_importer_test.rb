@@ -414,7 +414,7 @@ module BggApi
 
     # Tests for importing extensions
 
-    test "import creates extension with parent game" do
+    test "import creates expansion with parent game" do
       # First create parent game
       parent_game = BoardGame.create!(
         name: "Catan",
@@ -430,9 +430,10 @@ module BggApi
       )
       parent_game.create_bgg_board_game_association!(bgg_id: 13)
 
-      extension_data = {
+      expansion_data = {
         id: 12345,
         thing_type: "boardgameexpansion",
+        types: [{ name: "strategy", rank: 100 }],
         name: "Catan: Seafarers",
         year_published: 1997,
         min_players: 3,
@@ -448,27 +449,36 @@ module BggApi
         parent_game_ids: [13]
       }
 
-      @client.expect(:get_details, [extension_data], [[12345], { min_user_ratings: 0 }])
+      @client.expect(:get_details, [expansion_data], [[12345], { min_user_ratings: 0 }])
 
       imported = @importer.import_by_id(12345)
 
       assert_not_nil imported
+      assert_instance_of BoardGame, imported
       assert_equal "Catan: Seafarers", imported.name
-      assert_equal parent_game.id, imported.board_game_id
       assert_equal 1997, imported.year_published
       assert imported.persisted?
 
       # Check BGG association
-      assert_not_nil imported.bgg_extension_association
-      assert_equal 12345, imported.bgg_extension_association.bgg_id
+      assert_not_nil imported.bgg_board_game_association
+      assert_equal 12345, imported.bgg_board_game_association.bgg_id
+
+      # Check expansion relationship
+      relation = BoardGameRelation.find_by(source_game: imported, target_game: parent_game)
+      assert_not_nil relation
+      assert_equal "expands", relation.relation_type
+
+      # Check it appears in parent's expansions
+      assert_includes parent_game.expansions, imported
 
       @client.verify
     end
 
-    test "import skips extension when parent game not found" do
-      extension_data = {
+    test "import creates expansion without relation when parent game not found" do
+      expansion_data = {
         id: 12345,
         thing_type: "boardgameexpansion",
+        types: [{ name: "strategy", rank: 100 }],
         name: "Catan: Seafarers",
         year_published: 1997,
         min_players: 3,
@@ -479,25 +489,32 @@ module BggApi
         rating: 7.0,
         complexity: 2.4,
         user_ratings_count: 25000,
-        categories: [],
+        categories: ["Exploration"],
         mechanics: [],
         parent_game_ids: [13]  # Parent not in database
       }
 
-      @client.expect(:get_details, [extension_data], [[12345], { min_user_ratings: 0 }])
+      @client.expect(:get_details, [expansion_data], [[12345], { min_user_ratings: 0 }])
 
       imported = @importer.import_by_id(12345)
 
-      assert_nil imported
+      # Expansion is still imported as a BoardGame, just without the relation
+      assert_not_nil imported
+      assert_instance_of BoardGame, imported
+      assert_equal "Catan: Seafarers", imported.name
+
+      # But no relation was created
+      assert_equal 0, BoardGameRelation.where(source_game: imported).count
 
       @client.verify
     end
 
-    test "import raises error for extension without parent game IDs" do
-      extension_data = {
+    test "import creates expansion without relation when parent game IDs empty" do
+      expansion_data = {
         id: 12345,
         thing_type: "boardgameexpansion",
-        name: "Orphan Extension",
+        types: [{ name: "strategy", rank: 100 }],
+        name: "Orphan Expansion",
         year_published: 2020,
         min_players: 2,
         max_players: 4,
@@ -507,18 +524,22 @@ module BggApi
         rating: 7.0,
         complexity: 2.0,
         user_ratings_count: 10000,
-        categories: [],
+        categories: ["Adventure"],
         mechanics: [],
         parent_game_ids: []
       }
 
-      @client.expect(:get_details, [extension_data], [[12345], { min_user_ratings: 0 }])
+      @client.expect(:get_details, [expansion_data], [[12345], { min_user_ratings: 0 }])
 
-      error = assert_raises(BggApi::GameImporter::ImportError) do
-        @importer.import_by_id(12345)
-      end
+      imported = @importer.import_by_id(12345)
 
-      assert_match(/Extension 12345 has no parent games/, error.message)
+      # Expansion is imported as a BoardGame without any relation
+      assert_not_nil imported
+      assert_instance_of BoardGame, imported
+      assert_equal "Orphan Expansion", imported.name
+      assert_equal 0, BoardGameRelation.where(source_game: imported).count
+
+      @client.verify
     end
 
     test "import raises error for unknown game type" do

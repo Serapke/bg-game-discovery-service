@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_11_30_161353) do
+ActiveRecord::Schema[8.0].define(version: 2025_12_02_172319) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -25,15 +25,15 @@ ActiveRecord::Schema[8.0].define(version: 2025_11_30_161353) do
     t.check_constraint "bgg_id > 0", name: "check_bgg_id_positive"
   end
 
-  create_table "bgg_extension_associations", force: :cascade do |t|
-    t.bigint "extension_id", null: false
-    t.bigint "bgg_id", null: false
-    t.datetime "created_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
-    t.datetime "updated_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
-    t.index ["bgg_id"], name: "index_bgg_extension_associations_on_bgg_id", unique: true
-    t.index ["extension_id", "bgg_id"], name: "index_bgg_ext_associations_on_extension_and_bgg_id", unique: true
-    t.index ["extension_id"], name: "index_bgg_extension_associations_on_extension_id"
-    t.check_constraint "bgg_id > 0", name: "check_bgg_ext_id_positive"
+  create_table "board_game_relations", force: :cascade do |t|
+    t.bigint "source_game_id", null: false
+    t.bigint "target_game_id", null: false
+    t.string "relation_type", limit: 50, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["source_game_id", "target_game_id", "relation_type"], name: "idx_bg_relations_unique", unique: true
+    t.index ["target_game_id", "source_game_id", "relation_type"], name: "idx_bg_relations_reverse"
+    t.check_constraint "source_game_id <> target_game_id", name: "prevent_self_relation"
   end
 
   create_table "board_games", id: :serial, force: :cascade do |t|
@@ -75,29 +75,6 @@ ActiveRecord::Schema[8.0].define(version: 2025_11_30_161353) do
     t.check_constraint "rank > 0", name: "board_games_game_types_rank_check"
   end
 
-  create_table "extensions", id: :serial, force: :cascade do |t|
-    t.string "name", limit: 255, null: false
-    t.integer "board_game_id", null: false
-    t.integer "min_players"
-    t.integer "max_players"
-    t.integer "min_playing_time"
-    t.integer "max_playing_time"
-    t.decimal "rating", precision: 3, scale: 2
-    t.timestamptz "created_at", default: -> { "CURRENT_TIMESTAMP" }
-    t.timestamptz "updated_at", default: -> { "CURRENT_TIMESTAMP" }
-    t.decimal "difficulty_score", precision: 3, scale: 2
-    t.integer "year_published", null: false
-    t.integer "rating_count"
-    t.index ["board_game_id"], name: "idx_extensions_board_game_id"
-    t.index ["name"], name: "idx_extensions_name"
-    t.check_constraint "max_players >= min_players", name: "extensions_check"
-    t.check_constraint "max_playing_time >= min_playing_time", name: "extensions_check1"
-    t.check_constraint "min_players > 0", name: "extensions_min_players_check"
-    t.check_constraint "min_playing_time > 0", name: "extensions_min_playing_time_check"
-    t.check_constraint "rating >= 0::numeric AND rating <= 10::numeric", name: "extensions_rating_check"
-    t.check_constraint "rating_count >= 0", name: "extensions_rating_count_check"
-  end
-
   create_table "game_categories", force: :cascade do |t|
     t.string "name", null: false
     t.datetime "created_at", null: false
@@ -113,6 +90,6 @@ ActiveRecord::Schema[8.0].define(version: 2025_11_30_161353) do
   end
 
   add_foreign_key "bgg_board_game_associations", "board_games", on_delete: :cascade
-  add_foreign_key "bgg_extension_associations", "extensions", on_delete: :cascade
-  add_foreign_key "extensions", "board_games", name: "extensions_board_game_id_fkey", on_delete: :cascade
+  add_foreign_key "board_game_relations", "board_games", column: "source_game_id", on_delete: :cascade
+  add_foreign_key "board_game_relations", "board_games", column: "target_game_id", on_delete: :cascade
 end

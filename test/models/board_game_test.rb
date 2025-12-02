@@ -132,31 +132,50 @@ class BoardGameTest < ActiveSupport::TestCase
     assert @board_game.valid?
   end
 
-  test "should have many extensions" do
+  test "should have many expansions" do
     board_game = board_games(:catan)
-    extension = Extension.create!(
-      name: "Test Extension",
+    game_type = GameType.first || GameType.create!(name: "Strategy")
+    game_category = GameCategory.first || GameCategory.create!(name: "Economic")
+
+    expansion = BoardGame.create!(
+      name: "Test Expansion",
       year_published: 2021,
-      board_game: board_game,
       min_players: 3,
-      max_players: 5
+      max_players: 5,
+      game_types: [game_type],
+      game_categories: [game_category]
     )
 
-    assert_includes board_game.extensions, extension
+    BoardGameRelation.create!(
+      source_game: expansion,
+      target_game: board_game,
+      relation_type: :expands
+    )
+
+    assert_includes board_game.expansions, expansion
   end
 
-  test "should destroy associated extensions when destroyed" do
+  test "should destroy associated relations when destroyed" do
     board_game = board_games(:catan)
-    extension = Extension.create!(
-      name: "Test Extension",
+    game_type = GameType.first || GameType.create!(name: "Strategy")
+    game_category = GameCategory.first || GameCategory.create!(name: "Economic")
+
+    expansion = BoardGame.create!(
+      name: "Test Expansion",
       year_published: 2021,
-      board_game: board_game,
       min_players: 3,
-      max_players: 5
+      max_players: 5,
+      game_types: [game_type],
+      game_categories: [game_category]
     )
 
-    # Catan has 2 fixture extensions + 1 created above = 3 total
-    assert_difference 'Extension.count', -3 do
+    BoardGameRelation.create!(
+      source_game: expansion,
+      target_game: board_game,
+      relation_type: :expands
+    )
+
+    assert_difference 'BoardGameRelation.count', -1 do
       board_game.destroy
     end
   end

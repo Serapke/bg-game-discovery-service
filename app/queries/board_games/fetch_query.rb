@@ -19,11 +19,11 @@ module BoardGames
     def fetch_by_ids(ids)
       raise ArgumentError, 'No valid IDs provided' if ids.empty?
 
-      @relation.includes(:extensions, :game_types, :game_categories).where(id: ids)
+      @relation.includes(:expansions, :game_types, :game_categories).where(id: ids)
     end
 
     def fetch_all
-      @relation.includes(:extensions, :game_types, :game_categories).all
+      @relation.includes(:expansions, :game_types, :game_categories).all
     end
 
     def apply_filters(scope, player_count:, max_playing_time:, game_types:, min_rating:)

@@ -314,7 +314,8 @@ module BggApi
           mapped_type = map_rank_name_to_game_type(rank_name) if rank_name
           if mapped_type
             # Store both the type name and rank value
-            rank_int = rank_value&.to_i
+            # Set rank to nil if value is "Not Ranked" or invalid (to_i returns 0)
+            rank_int = rank_value&.match?(/^\d+$/) ? rank_value.to_i : nil
             types << { name: mapped_type, rank: rank_int }
           end
         end

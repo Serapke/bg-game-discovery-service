@@ -16,7 +16,7 @@ module BggApi
     # @option options [Integer] :min_user_ratings minimum user ratings required (default: 1000)
     # @option options [Boolean] :dry_run if true, returns unsaved records without persisting (default: false)
     #
-    # @return [Array<BoardGame, Extension>] imported games/extensions (persisted unless dry_run is true)
+    # @return [Array<BoardGame>] imported games/expansions (persisted unless dry_run is true)
     #
     # @example
     #   importer = BggApi::GameImporter.new
@@ -63,7 +63,7 @@ module BggApi
     # @param options [Hash] optional parameters
     # @option options [Boolean] :dry_run if true, returns an unsaved record without persisting (default: false)
     #
-    # @return [BoardGame, Extension, nil] imported game/extension or nil if not found
+    # @return [BoardGame, nil] imported game/expansion or nil if not found
     def import_by_id(bgg_id, options = {})
       dry_run = options[:dry_run] || false
 
@@ -86,14 +86,40 @@ module BggApi
     end
 
     def perform_import(game_data, dry_run:)
-      case game_data[:thing_type]
-      when "boardgame"
-        import_board_game(game_data, dry_run: dry_run)
-      when "boardgameexpansion"
-        import_extension(game_data, dry_run: dry_run)
-      else
-        raise ImportError, "Unknown game type: #{game_data[:thing_type]}"
+      thing_type = game_data[:thing_type]
+
+      # Validate thing_type
+      unless %w[boardgame boardgameexpansion].include?(thing_type)
+        raise ImportError, "Unknown game type: #{thing_type}"
       end
+
+      is_expansion = thing_type == "boardgameexpansion"
+
+      # Import as a board game regardless of type
+      board_game = import_board_game(game_data, dry_run: dry_run)
+      return board_game unless board_game && is_expansion && !dry_run
+
+      # If it's an expansion, create the 'expands' relationship(s)
+      parent_game_ids = game_data[:parent_game_ids]
+      if parent_game_ids.present?
+        found_parents, not_found_ids = find_parent_board_games(parent_game_ids)
+
+        # Create relations for all found parent games (skip if already exists)
+        found_parents.each do |parent_board_game|
+          BoardGameRelation.find_or_create_by!(
+            source_game: board_game,
+            target_game: parent_board_game,
+            relation_type: :expands
+          )
+        end
+
+        # Log any parent games that weren't found
+        if not_found_ids.any?
+          Rails.logger.info("Expansion #{game_data[:id]} imported but parent games #{not_found_ids.join(', ')} not found in database")
+        end
+      end
+
+      board_game
     end
 
     def import_board_game(game_data, dry_run:)
@@ -129,57 +155,15 @@ module BggApi
       board_game
     end
 
-    def import_extension(game_data, dry_run:)
-      # Check if already imported
-      existing = BggExtensionAssociation.find_by(bgg_id: game_data[:id])
-      return existing.extension if existing && !dry_run
+    def find_parent_board_games(parent_game_ids)
+      # Fetch all parent games in a single query
+      associations = BggBoardGameAssociation.where(bgg_id: parent_game_ids).includes(:board_game)
 
-      # Extensions need at least one parent game
-      parent_game_ids = game_data[:parent_game_ids]
-      if parent_game_ids.blank?
-        raise ImportError, "Extension #{game_data[:id]} has no parent games"
-      end
+      found_parents = associations.map(&:board_game)
+      found_bgg_ids = associations.map(&:bgg_id)
+      not_found_ids = parent_game_ids - found_bgg_ids
 
-      # Find the first parent game that exists in our database
-      # If multiple parents exist, we'll link to the first one we find
-      parent_board_game = find_parent_board_game(parent_game_ids)
-
-      if parent_board_game.nil?
-        # Skip this extension for now - parent game not imported yet
-        Rails.logger.info("Skipping extension #{game_data[:id]} - parent games #{parent_game_ids.join(', ')} not found")
-        return nil
-      end
-
-      extension = Extension.new(
-        name: game_data[:name],
-        year_published: game_data[:year_published],
-        board_game: parent_board_game,
-        min_players: game_data[:min_players],
-        max_players: game_data[:max_players],
-        min_playing_time: game_data[:min_playing_time],
-        max_playing_time: game_data[:max_playing_time],
-        rating: game_data[:rating],
-        rating_count: game_data[:user_ratings_count],
-        difficulty_score: game_data[:complexity]
-      )
-
-      return extension if dry_run
-
-      extension.save!
-
-      # Create BGG association
-      extension.create_bgg_extension_association!(bgg_id: game_data[:id])
-
-      extension
-    end
-
-    def find_parent_board_game(parent_game_ids)
-      # Look for any of the parent games by their BGG IDs
-      parent_game_ids.each do |parent_bgg_id|
-        association = BggBoardGameAssociation.find_by(bgg_id: parent_bgg_id)
-        return association.board_game if association
-      end
-      nil
+      [found_parents, not_found_ids]
     end
 
     def assign_game_types_with_ranks(board_game, types_data, dry_run:)

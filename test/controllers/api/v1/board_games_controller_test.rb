@@ -81,6 +81,21 @@ class Api::V1::BoardGamesControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "should include extensions in show response" do
+    # Create an expansion for the board game
+    expansion = BoardGame.create!(
+      name: "Test Expansion",
+      year_published: 2021,
+      min_players: 3,
+      max_players: 5,
+      game_types: @board_game.game_types,
+      game_categories: @board_game.game_categories
+    )
+    BoardGameRelation.create!(
+      source_game: expansion,
+      target_game: @board_game,
+      relation_type: :expands
+    )
+
     get api_v1_board_game_url(@board_game)
     assert_response :success
 
