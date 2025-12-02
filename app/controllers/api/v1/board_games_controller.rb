@@ -19,7 +19,7 @@ class Api::V1::BoardGamesController < ApplicationController
 
   def show
     board_game = BoardGame.includes(:expansions, :game_types, :game_categories).find(params[:id])
-    render json: ::BoardGames::Serializer.serialize(board_game)
+    render json: ::BoardGames::Details::Serializer.serialize(board_game)
   rescue ActiveRecord::RecordNotFound
     render json: { error: 'Board game not found' }, status: :not_found
   end

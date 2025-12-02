@@ -69,7 +69,7 @@ class Api::V1::BoardGamesControllerTest < ActionDispatch::IntegrationTest
     assert_equal @board_game.min_players, json_response["min_players"]
     assert_equal @board_game.max_players, json_response["max_players"]
     assert_equal @board_game.rating.to_s, json_response["rating"]
-    assert_includes json_response, "extensions"
+    assert_includes json_response, "expansions"
   end
 
   test "should return 404 for non-existent board game" do
@@ -80,7 +80,7 @@ class Api::V1::BoardGamesControllerTest < ActionDispatch::IntegrationTest
     assert_equal "Board game not found", json_response["error"]
   end
 
-  test "should include extensions in show response" do
+  test "should include expansions in show response" do
     # Create an expansion for the board game
     expansion = BoardGame.create!(
       name: "Test Expansion",
@@ -100,17 +100,17 @@ class Api::V1::BoardGamesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
 
     json_response = JSON.parse(response.body)
-    extensions = json_response["extensions"]
+    expansions = json_response["expansions"]
 
-    assert extensions.is_a?(Array)
-    assert extensions.length > 0
+    assert expansions.is_a?(Array)
+    assert expansions.length > 0
 
-    extension = extensions.first
-    assert_includes extension, "id"
-    assert_includes extension, "name"
-    assert_includes extension, "min_players"
-    assert_includes extension, "max_players"
-    assert_includes extension, "rating"
+    expansion_data = expansions.first
+    assert_includes expansion_data, "id"
+    assert_includes expansion_data, "name"
+    assert_includes expansion_data, "min_players"
+    assert_includes expansion_data, "max_players"
+    assert_includes expansion_data, "rating"
   end
 
   test "should search all board games when no parameters" do
@@ -284,7 +284,7 @@ class Api::V1::BoardGamesControllerTest < ActionDispatch::IntegrationTest
 
     json_response = JSON.parse(response.body)
 
-    required_fields = %w[id name game_types game_categories min_players max_players min_playing_time max_playing_time rating extensions]
+    required_fields = %w[id name game_types game_categories min_players max_players min_playing_time max_playing_time rating expansions]
     required_fields.each do |field|
       assert_includes json_response, field, "Response should include #{field}"
     end
@@ -299,12 +299,12 @@ class Api::V1::BoardGamesControllerTest < ActionDispatch::IntegrationTest
     assert json_response["game_categories"].all? { |cat| cat.is_a?(String) }, "game_categories should contain strings"
     assert json_response["game_categories"].any?, "game_categories should not be empty"
 
-    extensions = json_response["extensions"]
-    if extensions.any?
-      extension = extensions.first
-      extension_fields = %w[id name min_players max_players min_playing_time max_playing_time rating]
-      extension_fields.each do |field|
-        assert_includes extension, field, "Extension should include #{field}"
+    expansions = json_response["expansions"]
+    if expansions.any?
+      expansion = expansions.first
+      expansion_fields = %w[id name min_players max_players min_playing_time max_playing_time rating]
+      expansion_fields.each do |field|
+        assert_includes expansion, field, "Expansion should include #{field}"
       end
     end
   end

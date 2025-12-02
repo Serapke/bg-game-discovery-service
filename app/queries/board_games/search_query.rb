@@ -28,7 +28,7 @@ module BoardGames
     end
 
     def build_scope(params)
-      scope = @relation.includes(:expansions, :game_types, :game_categories)
+      scope = @relation.includes(:game_types, :game_categories)
       scope = apply_name_filter(scope, params[:name])
       scope = apply_player_count_filter(scope, params[:player_count])
       apply_playing_time_filters(scope, params)

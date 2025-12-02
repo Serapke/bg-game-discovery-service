@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: Game Discovery API
-  description: API for discovering board games and their extensions with BGG integration
+  description: API for discovering board games and their expansions with BGG integration
   version: 1.0.0
   contact:
     name: API Support
@@ -93,7 +93,7 @@ paths:
                         rating: "7.2"
                         rating_count: 50000
                         difficulty_score: "2.5"
-                        extensions: []
+                        expansions: []
                     total: 1
                 filtered:
                   summary: Filtered by player count and rating
@@ -110,7 +110,7 @@ paths:
                         rating: "7.2"
                         rating_count: 50000
                         difficulty_score: "2.5"
-                        extensions: []
+                        expansions: []
                     total: 1
         '400':
           description: Bad request - Invalid IDs provided
@@ -124,7 +124,7 @@ paths:
   /api/v1/board_games/{id}:
     get:
       summary: Get board game by ID
-      description: Retrieve a specific board game by its ID, including all extensions
+      description: Retrieve a specific board game by its ID, including all expansions
       operationId: getBoardGameById
       tags:
         - Board Games
@@ -155,7 +155,7 @@ paths:
                 rating: "7.2"
                 rating_count: 50000
                 difficulty_score: "2.5"
-                extensions:
+                expansions:
                   - id: 1
                     name: "Catan: Seafarers"
                     min_players: 3
@@ -251,7 +251,7 @@ paths:
                         rating: "7.2"
                         rating_count: 50000
                         difficulty_score: "2.5"
-                        extensions: []
+                        expansions: []
                     total: 1
                 empty:
                   summary: No results
@@ -338,7 +338,7 @@ components:
           nullable: true
           example: "2.5"
           description: Difficulty score as a decimal string (0-5)
-        extensions:
+        expansions:
           type: array
           items:
             $ref: '#/components/schemas/Extension'
@@ -349,7 +349,7 @@ components:
         - game_categories
         - min_players
         - max_players
-        - extensions
+        - expansions
 
     BoardGameDetailed:
       allOf:

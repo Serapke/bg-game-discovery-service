@@ -21,8 +21,7 @@ module BoardGames
         max_playing_time: board_game.max_playing_time,
         rating: board_game.rating,
         rating_count: board_game.rating_count,
-        difficulty_score: board_game.difficulty_score,
-        extensions: serialize_expansions(board_game.expansions)
+        difficulty_score: board_game.difficulty_score
       }
     end
 
@@ -31,25 +30,6 @@ module BoardGames
         board_games: board_games.map { |game| serialize(game) },
         total: board_games.count
       }
-    end
-
-    private
-
-    def serialize_expansions(expansions)
-      expansions.map do |expansion|
-        {
-          id: expansion.id,
-          name: expansion.name,
-          year_published: expansion.year_published,
-          min_players: expansion.min_players,
-          max_players: expansion.max_players,
-          min_playing_time: expansion.min_playing_time,
-          max_playing_time: expansion.max_playing_time,
-          rating: expansion.rating,
-          rating_count: expansion.rating_count,
-          difficulty_score: expansion.difficulty_score
-        }
-      end
     end
   end
 end
