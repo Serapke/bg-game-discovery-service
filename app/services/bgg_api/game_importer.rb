@@ -9,83 +9,114 @@ module BggApi
       @client = client
     end
 
-    # Search BGG and import all games from the first 20 results that meet the criteria
+    # Import multiple games from BGG by their IDs (max 20 IDs per call)
     #
-    # @param query [String] search query
+    # @param bgg_ids [Array<Integer>] Array of BGG game IDs (max 20)
     # @param options [Hash] optional parameters
-    # @option options [Integer] :min_user_ratings minimum user ratings required (default: 1000)
     # @option options [Boolean] :dry_run if true, returns unsaved records without persisting (default: false)
+    # @option options [Boolean] :force_update if true, updates existing games even if already imported (default: false)
     #
-    # @return [Array<BoardGame>] imported games/expansions (persisted unless dry_run is true)
+    # @return [Hash] Results with detailed information about each game
+    #   {
+    #     imported: [{ bgg_id:, board_game_id:, name:, ... }],
+    #     updated: [{ bgg_id:, board_game_id:, name:, ... }],
+    #     skipped: [{ bgg_id:, name:, reason: }],
+    #     failed: [{ bgg_id:, error: }],
+    #     related_ids: [123, 456, ...]  # BGG IDs of related games that should be imported
+    #   }
     #
-    # @example
-    #   importer = BggApi::GameImporter.new
-    #   games = importer.import_from_search("Catan")
-    #   # => [#<BoardGame id: 1, name: "Catan">, ...]
-    #
-    #   # Preview what would be imported without saving
-    #   games = importer.import_from_search("Catan", dry_run: true)
-    #   # => [#<BoardGame id: nil, name: "Catan">, ...]
-    def import_from_search(query, options = {})
-      min_ratings = options[:min_user_ratings] || 1_000
+    # @raise [ArgumentError] if more than 20 IDs are provided
+    def import_by_ids(bgg_ids, options = {})
       dry_run = options[:dry_run] || false
+      force_update = options[:force_update] || false
+      bgg_ids = bgg_ids.uniq
 
-      # Search BGG
-      search_results = @client.search(query)
-      return [] if search_results[:items].empty?
-
-      # Get IDs for the first batch (max 20)
-      bgg_ids = search_results[:items].first(20).map { |item| item[:id].to_i }
-      return [] if bgg_ids.empty?
-
-      Rails.logger.info("Importing #{bgg_ids.length} games from BGG search for query #{query}")
-
-      # Fetch details with filtering - this will filter by min_ratings
-      details = @client.get_details(bgg_ids, { min_user_ratings: min_ratings })
-
-      Rails.logger.info("Imported #{details.length} games from BGG search for query #{query}")
-      return [] if details.empty?
-
-      # Import all filtered games
-      imported = []
-      details.each do |game_data|
-        imported << import_game(game_data, dry_run: dry_run)
+      if bgg_ids.length > 20
+        raise ArgumentError, "Cannot import more than 20 games at once (got #{bgg_ids.length})"
       end
 
-      imported.compact
-    rescue BggApi::Client::Error => e
-      raise ImportError, "Failed to import games from BGG: #{e.message}"
-    end
+      return { imported: [], updated: [], skipped: [], failed: [], related_ids: [] } if bgg_ids.empty?
 
-    # Import a single game from BGG by its ID
-    #
-    # @param bgg_id [Integer] BGG game ID
-    # @param options [Hash] optional parameters
-    # @option options [Boolean] :dry_run if true, returns an unsaved record without persisting (default: false)
-    #
-    # @return [BoardGame, nil] imported game/expansion or nil if not found
-    def import_by_id(bgg_id, options = {})
-      dry_run = options[:dry_run] || false
+      Rails.logger.info("Importing #{bgg_ids.length} games from BGG by IDs: #{bgg_ids.join(', ')}")
 
-      details = @client.get_details([bgg_id], { min_user_ratings: 0 })
-      return nil if details.empty?
+      imported = []
+      updated = []
+      skipped = []
+      failed = []
+      related_ids = Set.new
 
-      import_game(details.first, dry_run: dry_run)
-    rescue BggApi::Client::Error => e
-      raise ImportError, "Failed to import game #{bgg_id} from BGG: #{e.message}"
+      begin
+        details = @client.get_details(bgg_ids, { min_user_ratings: 1_000 })
+
+        if details.empty?
+          Rails.logger.warn("No games found for IDs: #{bgg_ids.join(', ')}")
+          return {
+            imported: [],
+            updated: [],
+            skipped: [],
+            failed: bgg_ids.map { |id| { bgg_id: id, error: "Not found on BGG" } },
+            related_ids: []
+          }
+        end
+
+        # Import each game and collect related IDs
+        details.each do |game_data|
+          result = import_game_with_result(game_data, dry_run: dry_run, force_update: force_update)
+
+          # noinspection RubyCaseWithoutElseBlockInspection
+          case result[:status]
+          when :imported
+            imported << result
+          when :updated
+            updated << result
+          when :skipped
+            skipped << result
+          when :failed
+            failed << result
+          end
+
+          # Collect all related game IDs from links
+          if game_data[:links]
+            game_data[:links].each_value do |link_ids|
+              related_ids.merge(link_ids) if link_ids.is_a?(Array)
+            end
+          end
+        end
+
+        # Check for missing IDs
+        returned_ids = details.map { |d| d[:id] }
+        missing_ids = bgg_ids - returned_ids
+        if missing_ids.any?
+          Rails.logger.warn("Games not found on BGG: #{missing_ids.join(', ')}")
+          failed.concat(missing_ids.map { |id| { bgg_id: id, error: "Not found on BGG" } })
+        end
+      rescue BggApi::Client::Error => e
+        Rails.logger.error("BGG API error for IDs #{bgg_ids.join(', ')}: #{e.message}")
+        raise ImportError, "Failed to import games from BGG: #{e.message}"
+      end
+
+      # Remove already imported games from related_ids
+      existing_bgg_ids = BggBoardGameAssociation.where(bgg_id: related_ids.to_a).pluck(:bgg_id)
+      related_ids -= existing_bgg_ids
+
+      if related_ids.any?
+        Rails.logger.info("Found #{related_ids.length} related games to import: #{related_ids.to_a.join(', ')}")
+      end
+
+      { imported: imported, updated: updated, skipped: skipped, failed: failed, related_ids: related_ids.to_a }
     end
 
     private
 
-    def import_game(game_data, dry_run: false)
-      return perform_import(game_data, dry_run: dry_run) if dry_run
+    def import_game(game_data, dry_run: false, force_update: false)
+      return perform_import(game_data, dry_run: dry_run, force_update: force_update) if dry_run
 
       ActiveRecord::Base.transaction do
-        perform_import(game_data, dry_run: dry_run)
+        perform_import(game_data, dry_run: dry_run, force_update: force_update)
       end
     end
 
-    def perform_import(game_data, dry_run:)
+    def perform_import(game_data, dry_run:, force_update: false)
       thing_type = game_data[:thing_type]
 
       # Validate thing_type
@@ -94,7 +125,7 @@ module BggApi
       end
 
       # Import as a board game regardless of type
-      board_game = import_board_game(game_data, dry_run: dry_run)
+      board_game = import_board_game(game_data, dry_run: dry_run, force_update: force_update)
       return board_game unless board_game && !dry_run
 
       # Create game relationships from BGG links
@@ -113,12 +144,19 @@ module BggApi
       board_game
     end
 
-    def import_board_game(game_data, dry_run:)
+    def import_board_game(game_data, dry_run:, force_update: false)
       # Check if already imported
       existing = BggBoardGameAssociation.find_by(bgg_id: game_data[:id])
-      return existing.board_game if existing && !dry_run
 
-      board_game = BoardGame.new(
+      if existing && !force_update
+        return existing.board_game
+      end
+
+      # If updating an existing game, fetch it; otherwise create new
+      board_game = existing&.board_game || BoardGame.new
+
+      # Update attributes
+      board_game.assign_attributes(
         name: game_data[:name],
         year_published: game_data[:year_published],
         min_players: game_data[:min_players],
@@ -140,8 +178,10 @@ module BggApi
 
       board_game.save!
 
-      # Create BGG association
-      board_game.create_bgg_board_game_association!(bgg_id: game_data[:id])
+      # Create a BGG association if it doesn't exist
+      unless existing
+        board_game.create_bgg_board_game_association!(bgg_id: game_data[:id])
+      end
 
       board_game
     end
@@ -240,6 +280,55 @@ module BggApi
 
     def find_or_create_default_game_category(dry_run:)
       dry_run ? GameCategory.new(name: "General") : GameCategory.find_or_create_by!(name: "General")
+    end
+
+    def import_game_with_result(game_data, dry_run:, force_update:)
+      bgg_id = game_data[:id]
+      game_name = game_data[:name]
+
+      # Check if already imported
+      existing = BggBoardGameAssociation.find_by(bgg_id: bgg_id)
+
+      if existing && !force_update
+        return {
+          status: :skipped,
+          bgg_id: bgg_id,
+          name: existing.board_game.name,
+          reason: "Already imported"
+        }
+      end
+
+      # Import or update the game
+      game = import_game(game_data, dry_run: dry_run, force_update: force_update)
+
+      if game
+        status = existing ? :updated : :imported
+
+        {
+          status: status,
+          bgg_id: bgg_id,
+          board_game_id: game.id,
+          name: game.name,
+          rating: game.rating,
+          year_published: game.year_published
+        }
+      else
+        {
+          status: :failed,
+          bgg_id: bgg_id,
+          name: game_name,
+          error: "Import returned nil"
+        }
+      end
+    rescue StandardError => e
+      Rails.logger.error("Failed to import game #{bgg_id}: #{e.class} - #{e.message}")
+      Rails.logger.error(e.backtrace.first(5).join("\n"))
+      {
+        status: :failed,
+        bgg_id: bgg_id,
+        name: game_name,
+        error: "#{e.class}: #{e.message}"
+      }
     end
   end
 end

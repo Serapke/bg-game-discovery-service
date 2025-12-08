@@ -2,7 +2,7 @@ module BoardGames
   class SearchQuery
     def initialize(relation = BoardGame.all, importer: nil)
       @relation = relation
-      @importer = importer || BggApi::GameImporter.new
+      @importer = importer || BggApi::SearchImporter.new
     end
 
     def call(params)
@@ -36,7 +36,7 @@ module BoardGames
 
     def import_from_bgg(query)
       @importer.import_from_search(query)
-    rescue BggApi::GameImporter::ImportError => e
+    rescue BggApi::SearchImporter::ImportError => e
       # Log the error but don't fail the search
       Rails.logger.error("Failed to import games from BGG: #{e.message}")
       []
