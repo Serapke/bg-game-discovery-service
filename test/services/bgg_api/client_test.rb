@@ -434,6 +434,7 @@ module BggApi
       assert_equal [], expansion[:links][:contains]
       assert_equal [], expansion[:links][:reimplements]
       assert_equal [], expansion[:links][:reimplemented_by]
+      assert_equal [], expansion[:links][:integrates_with]
     end
 
     test "get_details handles compilations with contained game links" do
@@ -477,6 +478,7 @@ module BggApi
       assert_equal [100, 200], compilation[:links][:contains]
       assert_equal [], compilation[:links][:reimplements]
       assert_equal [], compilation[:links][:reimplemented_by]
+      assert_equal [], compilation[:links][:integrates_with]
     end
 
     test "get_details handles reimplementations with reimplemented game links" do
@@ -519,6 +521,7 @@ module BggApi
       assert_equal [], reimplementation[:links][:contains]
       assert_equal [822], reimplementation[:links][:reimplements]
       assert_equal [], reimplementation[:links][:reimplemented_by]
+      assert_equal [], reimplementation[:links][:integrates_with]
     end
 
     test "get_details handles games with reimplemented_by links" do
@@ -562,6 +565,51 @@ module BggApi
       assert_equal [], original[:links][:contains]
       assert_equal [], original[:links][:reimplements]
       assert_equal [230914, 364405], original[:links][:reimplemented_by]
+      assert_equal [], original[:links][:integrates_with]
+    end
+
+    test "get_details handles games with integration links" do
+      xml_response = <<~XML
+        <?xml version="1.0" encoding="utf-8"?>
+        <items termsofuse="https://boardgamegeek.com/xmlapi/termsofuse">
+          <item type="boardgame" id="12345">
+            <name type="primary" value="Space Base"/>
+            <yearpublished value="2018"/>
+            <minplayers value="2"/>
+            <maxplayers value="5"/>
+            <minplaytime value="60"/>
+            <maxplaytime value="60"/>
+            <playingtime value="60"/>
+            <link type="boardgameintegration" id="67890" value="Space Base: The Emergence of Shy Pluto"/>
+            <link type="boardgameintegration" id="111213" value="Space Base: Command Station"/>
+            <statistics page="1">
+              <ratings>
+                <usersrated value="15000"/>
+                <average value="7.2"/>
+                <averageweight value="2.1"/>
+              </ratings>
+            </statistics>
+          </item>
+        </items>
+      XML
+
+      stub_request(:get, "#{@base_url}/thing")
+        .with(query: { id: "12345", stats: 1 })
+        .to_return(status: 200, body: xml_response)
+
+      result = @client.get_details(12345)
+
+      assert_equal 1, result.length
+      game = result.first
+
+      assert_equal 12345, game[:id]
+      assert_equal "boardgame", game[:thing_type]
+      assert_equal "Space Base", game[:name]
+      assert_equal [], game[:links][:expands]
+      assert_equal [], game[:links][:contains]
+      assert_equal [], game[:links][:reimplements]
+      assert_equal [], game[:links][:reimplemented_by]
+      assert_equal [67890, 111213], game[:links][:integrates_with]
     end
 
     test "get_details raises ArgumentError for empty IDs" do

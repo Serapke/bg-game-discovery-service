@@ -288,7 +288,8 @@ module BggApi
         expands: [],            # Games this expands (inbound boardgameexpansion)
         contains: [],           # Games this compilation contains (inbound boardgamecompilation)
         reimplements: [],       # Games this reimplements (inbound boardgameimplementation)
-        reimplemented_by: []    # Games that reimplement this game (outbound boardgameimplementation)
+        reimplemented_by: [],   # Games that reimplement this game (outbound boardgameimplementation)
+        integrates_with: []     # Games this integrates with (boardgameintegration)
       }
 
       item.elements.each("link") do |link|
@@ -313,6 +314,9 @@ module BggApi
             # This game is reimplemented by another game
             links[:reimplemented_by] << game_id
           end
+        when "boardgameintegration"
+          # This game integrates with another game (bidirectional relationship)
+          links[:integrates_with] << game_id
         end
       end
 
