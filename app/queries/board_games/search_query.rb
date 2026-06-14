@@ -1,5 +1,7 @@
 module BoardGames
   class SearchQuery
+    VALID_GAME_TYPES = %w[abstract family party strategy thematic].freeze
+
     def initialize(relation = BoardGame.all, importer: nil)
       @relation = relation
       @importer = importer || BggApi::SearchImporter.new
@@ -25,13 +27,29 @@ module BoardGames
       if params.key?(:name) && params[:name].blank?
         raise ArgumentError, 'Name parameter cannot be empty'
       end
+
+      if params[:game_types].present?
+        types = extract_game_types(params)
+        invalid = types - VALID_GAME_TYPES
+        raise ArgumentError, "Invalid game type(s): #{invalid.join(', ')}. Valid values: #{VALID_GAME_TYPES.join(', ')}" if invalid.any?
+      end
     end
 
     def build_scope(params)
       scope = @relation.includes(:game_types, :game_categories)
       scope = apply_name_filter(scope, params[:name])
       scope = apply_player_count_filter(scope, params[:player_count])
-      apply_playing_time_filters(scope, params)
+      scope = apply_playing_time_filters(scope, params)
+      types = extract_game_types(params)
+      scope = scope.with_game_types(types) if types.any?
+      scope = scope.with_min_rating(params[:min_rating]) if params[:min_rating].present?
+      scope
+    end
+
+    def extract_game_types(params)
+      raw = params[:game_types]
+      return [] if raw.blank?
+      Array(raw).flat_map { |t| t.to_s.split(',') }.map { |t| t.strip.downcase }.reject(&:blank?).uniq
     end
 
     def import_from_bgg(query)

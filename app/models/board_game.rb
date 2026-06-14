@@ -39,7 +39,7 @@ class BoardGame < ApplicationRecord
   validate :must_have_at_least_one_game_type
   validate :must_have_at_least_one_game_category
 
-  scope :search_by_name, ->(name) { where("name ILIKE ?", "%#{name}%") if name.present? }
+  scope :search_by_name, ->(name) { where("board_games.name ILIKE ?", "%#{name}%") if name.present? }
   scope :for_player_count, ->(player_count) {
     where("board_games.min_players <= ? AND board_games.max_players >= ?", player_count, player_count) if player_count.present?
   }
@@ -53,7 +53,7 @@ class BoardGame < ApplicationRecord
     where("board_games.min_playing_time >= ?", min_time) if min_time.present?
   }
   scope :with_game_types, ->(types) {
-    joins(:game_types).where(game_types: { name: types }).distinct if types.present?
+    where(id: joins(:game_types).where(game_types: { name: types }).select(:id)) if types.present?
   }
   scope :with_min_rating, ->(min_rating) {
     where("board_games.rating >= ?", min_rating) if min_rating.present?
