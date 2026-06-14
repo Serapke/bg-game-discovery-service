@@ -338,6 +338,18 @@ components:
           nullable: true
           example: "2.5"
           description: Difficulty score as a decimal string (0-5)
+        image_url:
+          type: string
+          format: uri
+          nullable: true
+          example: "https://cf.geekdo-images.com/W3Bsga_uLP9kO91gZ7H8yw__original/img/xyz.jpg"
+          description: Full-size cover image URL (from BGG)
+        thumbnail_url:
+          type: string
+          format: uri
+          nullable: true
+          example: "https://cf.geekdo-images.com/W3Bsga_uLP9kO91gZ7H8yw__thumb/img/xyz.jpg"
+          description: Thumbnail cover image URL (from BGG)
         expansions:
           type: array
           items:

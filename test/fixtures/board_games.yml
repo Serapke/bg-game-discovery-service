@@ -7,6 +7,8 @@ catan:
   max_playing_time: 90
   rating: 7.2
   rating_count: 50000
+  image_url: "https://cf.geekdo-images.com/catan-image.jpg"
+  thumbnail_url: "https://cf.geekdo-images.com/catan-thumb.jpg"
   game_types: strategy, family
   game_categories: economic, negotiation
 

@@ -12,7 +12,7 @@ module BoardGames
 
       required_fields = [:id, :name, :year_published, :game_types, :game_categories, :min_players,
                         :max_players, :min_playing_time, :max_playing_time,
-                        :rating, :difficulty_score]
+                        :rating, :difficulty_score, :image_url, :thumbnail_url]
 
       required_fields.each do |field|
         assert_includes result, field, "Result should include #{field}"
@@ -44,6 +44,13 @@ module BoardGames
       assert result[:game_categories].is_a?(Array)
       assert result[:game_categories].all? { |cat| cat.is_a?(String) }
       assert result[:game_categories].any?
+    end
+
+    test "serialize includes image and thumbnail URLs" do
+      result = @serializer.serialize(@board_game)
+
+      assert_equal "https://cf.geekdo-images.com/catan-image.jpg", result[:image_url]
+      assert_equal "https://cf.geekdo-images.com/catan-thumb.jpg", result[:thumbnail_url]
     end
 
     test "serialize_collection returns hash with board_games and total" do

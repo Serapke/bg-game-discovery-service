@@ -19,6 +19,8 @@ module BoardGames
           rating: board_game.rating,
           rating_count: board_game.rating_count,
           difficulty_score: board_game.difficulty_score,
+          image_url: board_game.image_url,
+          thumbnail_url: board_game.thumbnail_url,
           expansions: serialize_expansions(board_game.expansions)
         }
       end
@@ -37,7 +39,9 @@ module BoardGames
             max_playing_time: expansion.max_playing_time,
             rating: expansion.rating,
             rating_count: expansion.rating_count,
-            difficulty_score: expansion.difficulty_score
+            difficulty_score: expansion.difficulty_score,
+            image_url: expansion.image_url,
+            thumbnail_url: expansion.thumbnail_url
           }
         end
       end

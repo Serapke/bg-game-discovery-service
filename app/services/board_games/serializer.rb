@@ -21,7 +21,9 @@ module BoardGames
         max_playing_time: board_game.max_playing_time,
         rating: board_game.rating,
         rating_count: board_game.rating_count,
-        difficulty_score: board_game.difficulty_score
+        difficulty_score: board_game.difficulty_score,
+        image_url: board_game.image_url,
+        thumbnail_url: board_game.thumbnail_url
       }
     end
 

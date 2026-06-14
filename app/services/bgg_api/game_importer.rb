@@ -165,7 +165,9 @@ module BggApi
         max_playing_time: game_data[:max_playing_time],
         rating: game_data[:rating],
         rating_count: game_data[:user_ratings_count],
-        difficulty_score: game_data[:complexity]
+        difficulty_score: game_data[:complexity],
+        image_url: game_data[:image_url],
+        thumbnail_url: game_data[:thumbnail_url]
       )
 
       # Assign game categories

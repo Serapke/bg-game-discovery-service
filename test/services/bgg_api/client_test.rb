@@ -292,6 +292,41 @@ module BggApi
       assert_equal 50000, game[:user_ratings_count]
       assert_equal ["Economic", "Negotiation"], game[:categories]
       assert_equal ["Dice Rolling", "Trading"], game[:mechanics]
+      assert_equal "https://cf.geekdo-images.com/image.jpg", game[:image_url]
+      assert_equal "https://cf.geekdo-images.com/thumb.jpg", game[:thumbnail_url]
+    end
+
+    test "get_details omits image fields when BGG response has none" do
+      xml_response = <<~XML
+        <?xml version="1.0" encoding="utf-8"?>
+        <items termsofuse="https://boardgamegeek.com/xmlapi/termsofuse">
+            <item type="boardgame" id="13">
+                <name type="primary" value="Catan"/>
+                <yearpublished value="1995"/>
+                <minplayers value="3"/>
+                <maxplayers value="4"/>
+                <minplaytime value="60"/>
+                <maxplaytime value="120"/>
+                <playingtime value="120"/>
+                <statistics>
+                    <ratings>
+                        <usersrated value="50000"/>
+                        <average value="7.12"/>
+                        <averageweight value="2.35"/>
+                    </ratings>
+                </statistics>
+            </item>
+        </items>
+      XML
+
+      stub_request(:get, "#{@base_url}/thing")
+        .with(query: { id: "13", stats: 1 })
+        .to_return(status: 200, body: xml_response)
+
+      game = @client.get_details(13).first
+
+      assert_nil game[:image_url]
+      assert_nil game[:thumbnail_url]
     end
 
     test "get_details accepts array of IDs" do

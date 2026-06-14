@@ -221,8 +221,17 @@ module BggApi
         user_ratings_count: extract_user_ratings_count(item),
         categories: extract_links(item, "boardgamecategory"),
         mechanics: extract_links(item, "boardgamemechanic"),
+        image_url: extract_text_element(item, "image"),
+        thumbnail_url: extract_text_element(item, "thumbnail"),
         links: extract_game_links(item)
       }.compact
+    end
+
+    def extract_text_element(item, element_name)
+      element = item.elements[element_name]
+      text = element&.text
+      return nil if text.nil? || text.strip.empty?
+      text.strip
     end
 
     def extract_primary_name(item)
