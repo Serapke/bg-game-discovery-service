@@ -11,6 +11,7 @@ Rails.application.routes.draw do
       resources :board_games, only: [:index, :show] do
         collection do
           get :search
+          get :trending
         end
       end
     end

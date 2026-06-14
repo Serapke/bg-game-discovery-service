@@ -86,6 +86,26 @@ module BggApi
     #   #   },
     #   #   ...
     #   # ]
+    # Get the BGG "hot" list of trending items
+    #
+    # @param type [String] item type to fetch (default: "boardgame")
+    #
+    # @return [Hash] parsed results with :total and :items (same shape as #search)
+    #   Items are ordered by BGG hotness rank.
+    def hot(type: "boardgame")
+      response = get("hot", { type: type })
+      parse_hot_response(response)
+    rescue Faraday::TimeoutError, Faraday::ConnectionFailed, Timeout::Error => e
+      raise TimeoutError, "Request to BGG API timed out: #{e.message}"
+    rescue Faraday::Error => e
+      if e.message.include?("execution expired") || e.message.include?("timeout")
+        raise TimeoutError, "Request to BGG API timed out: #{e.message}"
+      end
+      raise ApiError, "BGG API request failed: #{e.message}"
+    rescue REXML::ParseException => e
+      raise ParseError, "Failed to parse BGG API response: #{e.message}"
+    end
+
     def get_details(ids, options = {})
       ids = Array(ids)
       raise ArgumentError, "ids cannot be empty" if ids.empty?
@@ -172,6 +192,33 @@ module BggApi
           year_published: year_element&.attributes&.[]("value")
         }.compact
       end.compact
+    end
+
+    # The /hot endpoint returns <item> elements with a `rank` attribute and a
+    # single <name value="..."/> element (no type="primary"), so we use a
+    # dedicated parser rather than the search one.
+    def parse_hot_response(xml_string)
+      doc = REXML::Document.new(xml_string)
+      root = doc.root
+
+      raise ParseError, "Invalid XML response structure" unless root&.name == "items"
+
+      items = root.elements.map do |item|
+        next unless item.name == "item"
+
+        name_element = item.elements["name"]
+        year_element = item.elements["yearpublished"]
+
+        {
+          id: item.attributes["id"],
+          type: item.attributes["type"],
+          rank: item.attributes["rank"]&.to_i,
+          name: name_element&.attributes&.[]("value"),
+          year_published: year_element&.attributes&.[]("value")
+        }.compact
+      end.compact
+
+      { total: items.length, items: items }
     end
 
     def parse_thing_response(xml_string, min_ratings)

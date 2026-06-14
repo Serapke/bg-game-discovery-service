@@ -31,7 +31,32 @@ class Api::V1::BoardGamesController < ApplicationController
     render json: { error: e.message }, status: :bad_request
   end
 
+  TRENDING_CACHE_KEY = 'bgg:hot:boardgame'
+  TRENDING_CACHE_TTL = 1.week
+
+  def trending
+    bgg_ids = Rails.cache.fetch(TRENDING_CACHE_KEY, expires_in: TRENDING_CACHE_TTL) do
+      ::BggApi::HotImporter.new.import_hot[:all_ids]
+    end
+
+    board_games = ordered_board_games_for_bgg_ids(bgg_ids)
+    render json: ::BoardGames::Serializer.serialize_collection(board_games)
+  rescue ::BggApi::HotImporter::ImportError => e
+    render json: { error: e.message }, status: :bad_gateway
+  end
+
   private
+
+  def ordered_board_games_for_bgg_ids(bgg_ids)
+    return [] if bgg_ids.blank?
+
+    associations = BggBoardGameAssociation
+      .where(bgg_id: bgg_ids)
+      .includes(board_game: [:game_types, :game_categories])
+
+    by_bgg_id = associations.each_with_object({}) { |a, acc| acc[a.bgg_id] = a.board_game }
+    bgg_ids.map { |id| by_bgg_id[id] }.compact
+  end
 
   def parse_ids
     params[:ids].to_s.split(',').map(&:to_i).reject(&:zero?)
