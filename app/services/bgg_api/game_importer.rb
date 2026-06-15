@@ -5,8 +5,9 @@ module BggApi
   class GameImporter
     class ImportError < StandardError; end
 
-    def initialize(client: BggApi::Client.new)
+    def initialize(client: BggApi::Client.new, event_publisher: Recommendations::EventPublisher.new)
       @client = client
+      @event_publisher = event_publisher
     end
 
     # Import multiple games from BGG by their IDs (max 20 IDs per call)
@@ -93,6 +94,12 @@ module BggApi
       rescue BggApi::Client::Error => e
         Rails.logger.error("BGG API error for IDs #{bgg_ids.join(', ')}: #{e.message}")
         raise ImportError, "Failed to import games from BGG: #{e.message}"
+      end
+
+      # Fetch recommendations for each successfully imported/updated game
+      (imported + updated).each do |game_result|
+        rec_bgg_ids = fetch_and_publish_recommendations(game_result[:bgg_id], game_result[:board_game_id])
+        related_ids.merge(rec_bgg_ids)
       end
 
       # Remove already imported games from related_ids
@@ -331,6 +338,19 @@ module BggApi
         name: game_name,
         error: "#{e.class}: #{e.message}"
       }
+    end
+
+    def fetch_and_publish_recommendations(bgg_id, board_game_id)
+      rec_bgg_ids = @client.get_recommendations(bgg_id)
+      return [] if rec_bgg_ids.empty?
+
+      resolved_ids = BggBoardGameAssociation.where(bgg_id: rec_bgg_ids).pluck(:board_game_id)
+      @event_publisher.publish(game_id: board_game_id, recommended_game_ids: resolved_ids)
+
+      rec_bgg_ids
+    rescue BggApi::Client::Error => e
+      Rails.logger.warn("Failed to fetch recommendations for BGG game #{bgg_id}: #{e.message}")
+      []
     end
   end
 end

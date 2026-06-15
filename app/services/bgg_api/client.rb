@@ -106,6 +106,27 @@ module BggApi
       raise ParseError, "Failed to parse BGG API response: #{e.message}"
     end
 
+    # Get recommended games for a board game from the BGG geekdo API
+    #
+    # @param bgg_id [Integer] the BGG ID of the game
+    # @return [Array<Integer>] array of recommended BGG IDs
+    def get_recommendations(bgg_id)
+      response = recommendations_connection.get("api/geekitem/recs", {
+        ajax: 1, objectid: bgg_id, objecttype: "thing", pageid: 1
+      })
+      body = JSON.parse(response.body)
+      body["recs"]&.map { |rec| rec.dig("item", "id").to_i }&.reject(&:zero?) || []
+    rescue Faraday::TimeoutError, Faraday::ConnectionFailed, Timeout::Error => e
+      raise TimeoutError, "Request to BGG recs API timed out: #{e.message}"
+    rescue Faraday::Error => e
+      if e.message.include?("execution expired") || e.message.include?("timeout")
+        raise TimeoutError, "Request to BGG recs API timed out: #{e.message}"
+      end
+      raise ApiError, "BGG recs API request failed: #{e.message}"
+    rescue JSON::ParserError => e
+      raise ParseError, "Failed to parse BGG recs API response: #{e.message}"
+    end
+
     def get_details(ids, options = {})
       ids = Array(ids)
       raise ArgumentError, "ids cannot be empty" if ids.empty?
@@ -137,6 +158,19 @@ module BggApi
           open_timeout: BggApi::OPEN_TIMEOUT
         },
         headers: default_headers
+      ) do |f|
+        f.response :raise_error
+        f.adapter Faraday.default_adapter
+      end
+    end
+
+    def recommendations_connection
+      @recommendations_connection ||= Faraday.new(
+        url: BggApi::GEEKDO_BASE_URL,
+        request: {
+          timeout: BggApi::TIMEOUT,
+          open_timeout: BggApi::OPEN_TIMEOUT
+        }
       ) do |f|
         f.response :raise_error
         f.adapter Faraday.default_adapter
