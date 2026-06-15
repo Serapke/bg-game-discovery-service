@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "faraday"
+require "nokogiri"
 require "rexml/document"
 
 module BggApi
@@ -291,6 +292,7 @@ module BggApi
         thing_type: item.attributes["type"],
         types: extract_game_types(item),
         name: extract_primary_name(item),
+        description: extract_description(item),
         year_published: extract_year_published(item),
         min_players: extract_attribute(item, "minplayers"),
         max_players: extract_attribute(item, "maxplayers"),
@@ -313,6 +315,15 @@ module BggApi
       text = element&.text
       return nil if text.nil? || text.strip.empty?
       text.strip
+    end
+
+    # BGG descriptions contain named HTML entities (&bull;, &mdash;, &rsquo;, etc.) that
+    # neither REXML nor CGI.unescapeHTML decode. Use Nokogiri's HTML parser to resolve
+    # the full HTML4 entity set into plain text.
+    def extract_description(item)
+      raw = extract_text_element(item, "description")
+      return nil if raw.nil?
+      Nokogiri::HTML.fragment(raw).text
     end
 
     def extract_primary_name(item)

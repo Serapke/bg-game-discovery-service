@@ -368,6 +368,10 @@ components:
         - $ref: '#/components/schemas/BoardGame'
         - type: object
           properties:
+            description:
+              type: string
+              nullable: true
+              description: Long-form game description from BoardGameGeek
             base_games:
               type: array
               items:

@@ -172,6 +172,7 @@ module BggApi
       # Update attributes
       board_game.assign_attributes(
         name: game_data[:name],
+        description: game_data[:description],
         year_published: game_data[:year_published],
         min_players: game_data[:min_players],
         max_players: game_data[:max_players],

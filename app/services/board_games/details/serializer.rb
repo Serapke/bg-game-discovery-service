@@ -19,6 +19,7 @@ module BoardGames
         payload = {
           id: board_game.id,
           name: board_game.name,
+          description: board_game.description,
           year_published: board_game.year_published,
           game_types: board_game.game_types.map(&:name),
           game_categories: board_game.game_categories.map(&:name),
