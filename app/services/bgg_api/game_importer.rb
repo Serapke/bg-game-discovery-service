@@ -30,6 +30,7 @@ module BggApi
     def import_by_ids(bgg_ids, options = {})
       dry_run = options[:dry_run] || false
       force_update = options[:force_update] || false
+      skip_recommendations = options[:skip_recommendations] || false
       bgg_ids = bgg_ids.uniq
 
       if bgg_ids.length > 20
@@ -97,9 +98,11 @@ module BggApi
       end
 
       # Fetch recommendations for each successfully imported/updated game
-      (imported + updated).each do |game_result|
-        rec_bgg_ids = fetch_and_publish_recommendations(game_result[:bgg_id], game_result[:board_game_id])
-        related_ids.merge(rec_bgg_ids)
+      unless skip_recommendations
+        (imported + updated).each do |game_result|
+          rec_bgg_ids = fetch_and_publish_recommendations(game_result[:bgg_id], game_result[:board_game_id])
+          related_ids.merge(rec_bgg_ids)
+        end
       end
 
       # Remove already imported games from related_ids
@@ -111,6 +114,10 @@ module BggApi
       end
 
       { imported: imported, updated: updated, skipped: skipped, failed: failed, related_ids: related_ids.to_a }
+    end
+
+    def publish_recommendations_for(board_game_id, bgg_id)
+      fetch_and_publish_recommendations(bgg_id, board_game_id)
     end
 
     private

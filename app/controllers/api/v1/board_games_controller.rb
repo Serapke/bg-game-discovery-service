@@ -44,6 +44,14 @@ class Api::V1::BoardGamesController < ApplicationController
   TRENDING_CACHE_KEY = 'bgg:hot:boardgame'
   TRENDING_CACHE_TTL = 1.week
 
+  def refresh
+    association = BggBoardGameAssociation.find_by(board_game_id: params[:id])
+    return render json: { error: 'Board game not found' }, status: :not_found unless association
+
+    BggGameRefreshJob.perform_later([association.bgg_id])
+    render json: { status: 'queued', bgg_id: association.bgg_id }, status: :accepted
+  end
+
   def trending
     bgg_ids = Rails.cache.fetch(TRENDING_CACHE_KEY, expires_in: TRENDING_CACHE_TTL) do
       ::BggApi::HotImporter.new.import_hot[:all_ids]

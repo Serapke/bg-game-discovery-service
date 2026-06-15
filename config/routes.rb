@@ -9,6 +9,9 @@ Rails.application.routes.draw do
   namespace :api do
     namespace :v1 do
       resources :board_games, only: [:index, :show] do
+        member do
+          post :refresh
+        end
         collection do
           get :search
           get :trending
