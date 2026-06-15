@@ -366,7 +366,40 @@ components:
     BoardGameDetailed:
       allOf:
         - $ref: '#/components/schemas/BoardGame'
-      description: Board game with full extension details
+        - type: object
+          properties:
+            base_games:
+              type: array
+              items:
+                $ref: '#/components/schemas/Extension'
+            contained_games:
+              type: array
+              items:
+                $ref: '#/components/schemas/Extension'
+            containers:
+              type: array
+              items:
+                $ref: '#/components/schemas/Extension'
+            reimplemented_games:
+              type: array
+              items:
+                $ref: '#/components/schemas/Extension'
+            reimplementations:
+              type: array
+              items:
+                $ref: '#/components/schemas/Extension'
+            integrated_games:
+              type: array
+              items:
+                $ref: '#/components/schemas/Extension'
+          required:
+            - base_games
+            - contained_games
+            - containers
+            - reimplemented_games
+            - reimplementations
+            - integrated_games
+      description: Board game with full relation details (expansions, base games, contained games, containers, reimplementations, reimplemented games, integrated games)
 
     Extension:
       type: object
@@ -377,6 +410,9 @@ components:
         name:
           type: string
           example: "Catan: Seafarers"
+        year_published:
+          type: integer
+          example: 1997
         min_players:
           type: integer
           minimum: 1
@@ -408,6 +444,14 @@ components:
           type: string
           nullable: true
           example: "2.6"
+        image_url:
+          type: string
+          format: uri
+          nullable: true
+        thumbnail_url:
+          type: string
+          format: uri
+          nullable: true
       required:
         - id
         - name

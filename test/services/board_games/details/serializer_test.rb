@@ -97,6 +97,53 @@ module BoardGames
         assert_equal @board_game.id, result[:id]
         assert_includes result, :expansions
       end
+
+      test "serialize returns all relation arrays" do
+        result = @serializer.serialize(@board_game)
+
+        BoardGames::Details::Serializer::RELATION_KEYS.each do |key|
+          assert_includes result, key, "Result should include #{key}"
+          assert_instance_of Array, result[key]
+        end
+      end
+
+      test "serialize populates each relation type from board_game_relations" do
+        game_type = GameType.first || GameType.create!(name: "Strategy")
+        game_category = GameCategory.first || GameCategory.create!(name: "Economic")
+
+        related = {}
+        BoardGames::Details::Serializer::RELATION_KEYS.each_with_index do |key, idx|
+          related[key] = BoardGame.create!(
+            name: "Related #{key} #{idx}",
+            year_published: 2000 + idx,
+            min_players: 2,
+            max_players: 4,
+            game_types: [game_type],
+            game_categories: [game_category]
+          )
+        end
+
+        # expansions: source expands target(@board_game)
+        BoardGameRelation.create!(source_game: related[:expansions], target_game: @board_game, relation_type: :expands)
+        # base_games: @board_game expands target
+        BoardGameRelation.create!(source_game: @board_game, target_game: related[:base_games], relation_type: :expands)
+        # contained_games: @board_game contains target
+        BoardGameRelation.create!(source_game: @board_game, target_game: related[:contained_games], relation_type: :contains)
+        # containers: source contains @board_game
+        BoardGameRelation.create!(source_game: related[:containers], target_game: @board_game, relation_type: :contains)
+        # reimplemented_games: @board_game reimplements target
+        BoardGameRelation.create!(source_game: @board_game, target_game: related[:reimplemented_games], relation_type: :reimplements)
+        # reimplementations: source reimplements @board_game
+        BoardGameRelation.create!(source_game: related[:reimplementations], target_game: @board_game, relation_type: :reimplements)
+        # integrated_games: @board_game integrates_with target
+        BoardGameRelation.create!(source_game: @board_game, target_game: related[:integrated_games], relation_type: :integrates_with)
+
+        result = BoardGames::Details::Serializer.serialize(@board_game.reload)
+
+        BoardGames::Details::Serializer::RELATION_KEYS.each do |key|
+          assert_equal [related[key].id], result[key].map { |g| g[:id] }, "Wrong contents for #{key}"
+        end
+      end
     end
   end
 end

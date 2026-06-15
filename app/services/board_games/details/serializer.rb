@@ -1,12 +1,22 @@
 module BoardGames
   module Details
     class Serializer
+      RELATION_KEYS = %i[
+        expansions
+        base_games
+        contained_games
+        containers
+        reimplemented_games
+        reimplementations
+        integrated_games
+      ].freeze
+
       def self.serialize(board_game)
         new.serialize(board_game)
       end
 
       def serialize(board_game)
-        {
+        payload = {
           id: board_game.id,
           name: board_game.name,
           year_published: board_game.year_published,
@@ -20,28 +30,33 @@ module BoardGames
           rating_count: board_game.rating_count,
           difficulty_score: board_game.difficulty_score,
           image_url: board_game.image_url,
-          thumbnail_url: board_game.thumbnail_url,
-          expansions: serialize_expansions(board_game.expansions)
+          thumbnail_url: board_game.thumbnail_url
         }
+
+        RELATION_KEYS.each do |key|
+          payload[key] = serialize_summary(board_game.public_send(key))
+        end
+
+        payload
       end
 
       private
 
-      def serialize_expansions(expansions)
-        expansions.map do |expansion|
+      def serialize_summary(games)
+        games.map do |game|
           {
-            id: expansion.id,
-            name: expansion.name,
-            year_published: expansion.year_published,
-            min_players: expansion.min_players,
-            max_players: expansion.max_players,
-            min_playing_time: expansion.min_playing_time,
-            max_playing_time: expansion.max_playing_time,
-            rating: expansion.rating,
-            rating_count: expansion.rating_count,
-            difficulty_score: expansion.difficulty_score,
-            image_url: expansion.image_url,
-            thumbnail_url: expansion.thumbnail_url
+            id: game.id,
+            name: game.name,
+            year_published: game.year_published,
+            min_players: game.min_players,
+            max_players: game.max_players,
+            min_playing_time: game.min_playing_time,
+            max_playing_time: game.max_playing_time,
+            rating: game.rating,
+            rating_count: game.rating_count,
+            difficulty_score: game.difficulty_score,
+            image_url: game.image_url,
+            thumbnail_url: game.thumbnail_url
           }
         end
       end
