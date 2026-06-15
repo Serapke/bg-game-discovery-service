@@ -444,4 +444,51 @@ class Api::V1::BoardGamesControllerTest < ActionDispatch::IntegrationTest
       assert_includes game["game_types"], strategy_type.name
     end
   end
+
+  test "should paginate index with page and per_page" do
+    get api_v1_board_games_url, params: { page: 1, per_page: 2, sort: 'rating' }
+    assert_response :success
+
+    json_response = JSON.parse(response.body)
+    assert_equal 1, json_response["page"]
+    assert_equal 2, json_response["per_page"]
+    assert_equal BoardGame.count, json_response["total"]
+    assert_equal((BoardGame.count.to_f / 2).ceil, json_response["total_pages"])
+    assert_equal 2, json_response["board_games"].length
+  end
+
+  test "should sort index by rating descending" do
+    get api_v1_board_games_url, params: { sort: 'rating' }
+    assert_response :success
+
+    json_response = JSON.parse(response.body)
+    ratings = json_response["board_games"].map { |g| g["rating"].to_f }
+    assert_equal ratings.sort.reverse, ratings
+  end
+
+  test "should sort index by recommended without error" do
+    get api_v1_board_games_url, params: { sort: 'recommended' }
+    assert_response :success
+
+    json_response = JSON.parse(response.body)
+    assert json_response["board_games"].any?
+  end
+
+  test "should return bad request for invalid sort" do
+    get api_v1_board_games_url, params: { sort: 'bogus' }
+    assert_response :bad_request
+
+    json_response = JSON.parse(response.body)
+    assert_match(/Invalid sort/, json_response["error"])
+  end
+
+  test "should return second page with offset" do
+    get api_v1_board_games_url, params: { page: 2, per_page: 2, sort: 'rating' }
+    assert_response :success
+
+    json_response = JSON.parse(response.body)
+    assert_equal 2, json_response["page"]
+    # 4 fixtures total, page 2 with per_page 2 = remaining 2
+    assert_equal [BoardGame.count - 2, 2].min, json_response["board_games"].length
+  end
 end

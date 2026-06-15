@@ -1,20 +1,41 @@
 class Api::V1::BoardGamesController < ApplicationController
   def index
-    ids = parse_ids if params.key?(:ids)
+    if params.key?(:ids)
+      ids = parse_ids
+      if ids.empty?
+        render json: { error: 'No valid IDs provided' }, status: :bad_request
+        return
+      end
 
-    if ids&.empty?
-      render json: { error: 'No valid IDs provided' }, status: :bad_request
+      board_games = ::BoardGames::FetchQuery.new.call(
+        ids: ids,
+        player_count: params[:player_count],
+        max_playing_time: params[:max_playing_time],
+        game_types: parse_game_types,
+        min_rating: params[:min_rating]
+      )
+      render json: ::BoardGames::Serializer.serialize_collection(board_games)
       return
     end
 
-    board_games = ::BoardGames::FetchQuery.new.call(
-      ids: ids,
+    result = ::BoardGames::FetchQuery.new.paginated(
+      sort: params[:sort],
+      page: params[:page],
+      per_page: params[:per_page],
       player_count: params[:player_count],
       max_playing_time: params[:max_playing_time],
       game_types: parse_game_types,
       min_rating: params[:min_rating]
     )
-    render json: ::BoardGames::Serializer.serialize_collection(board_games)
+    payload = ::BoardGames::Serializer.serialize_collection(result[:records]).merge(
+      total: result[:total],
+      page: result[:page],
+      per_page: result[:per_page],
+      total_pages: result[:total_pages]
+    )
+    render json: payload
+  rescue ArgumentError => e
+    render json: { error: e.message }, status: :bad_request
   end
 
   def show
