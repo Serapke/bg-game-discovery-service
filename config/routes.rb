@@ -15,6 +15,7 @@ Rails.application.routes.draw do
         collection do
           get :search
           get :trending
+          get :related_ids
         end
       end
     end

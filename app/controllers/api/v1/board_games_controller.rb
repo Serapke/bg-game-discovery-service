@@ -73,6 +73,21 @@ class Api::V1::BoardGamesController < ApplicationController
     render json: { status: 'queued', bgg_id: association.bgg_id }, status: :accepted
   end
 
+  def related_ids
+    ids = parse_ids
+    if ids.empty?
+      render json: { error: 'No valid IDs provided' }, status: :bad_request
+      return
+    end
+
+    related = BoardGameRelation
+      .where('source_game_id IN (:ids) OR target_game_id IN (:ids)', ids: ids)
+      .pluck(:source_game_id, :target_game_id)
+      .flatten
+      .uniq
+    render json: { related_ids: related - ids }
+  end
+
   def trending
     bgg_ids = Rails.cache.fetch(TRENDING_CACHE_KEY, expires_in: TRENDING_CACHE_TTL) do
       ::BggApi::HotImporter.new.import_hot[:all_ids]
