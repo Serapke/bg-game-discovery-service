@@ -68,6 +68,18 @@ module BoardGames
       assert_equal 2, result[:total]
     end
 
+    test "serialize_collection defaults importing to false" do
+      result = @serializer.serialize_collection(BoardGame.limit(2))
+
+      assert_equal false, result[:importing]
+    end
+
+    test "serialize_collection reflects importing flag when provided" do
+      result = @serializer.serialize_collection(BoardGame.limit(2), importing: true)
+
+      assert_equal true, result[:importing]
+    end
+
     test "serialize_collection serializes all board games" do
       board_games = BoardGame.limit(2)
       result = @serializer.serialize_collection(board_games)

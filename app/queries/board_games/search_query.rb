@@ -2,9 +2,14 @@ module BoardGames
   class SearchQuery
     VALID_GAME_TYPES = %w[abstract family party strategy thematic].freeze
 
+    # True when the BGG fallback enqueued background import jobs, meaning more
+    # matches may appear on a subsequent request once those jobs finish.
+    attr_reader :importing
+
     def initialize(relation = BoardGame.all, importer: nil)
       @relation = relation
       @importer = importer || BggApi::SearchImporter.new
+      @importing = false
     end
 
     def call(params)
@@ -12,14 +17,16 @@ module BoardGames
 
       scope = build_scope(params)
 
-      # If no results found, try importing from BGG and search again
-      if scope.empty?
+      # If fewer than 5 results found, try importing from BGG and search again
+      if params[:name].present? && scope.count < 5
         import_from_bgg(params[:name])
         scope = build_scope(params)
       end
 
       scope
     end
+
+    alias importing? importing
 
     private
 
@@ -53,7 +60,9 @@ module BoardGames
     end
 
     def import_from_bgg(query)
-      @importer.import_from_search(query)
+      result = @importer.import_from_search(query)
+      @importing = result.is_a?(Hash) && result[:importing] == true
+      result
     rescue BggApi::SearchImporter::ImportError => e
       # Log the error but don't fail the search
       Rails.logger.error("Failed to import games from BGG: #{e.message}")

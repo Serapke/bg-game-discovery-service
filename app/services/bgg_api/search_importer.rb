@@ -21,7 +21,8 @@ module BggApi
     #     total_found: 45,
     #     imported_immediately: [<BoardGame>, ...],
     #     enqueued_count: 25,
-    #     enqueued_ids: [123, 456, ...]
+    #     enqueued_ids: [123, 456, ...],
+    #     importing: true   # background job enqueued that will import more games
     #   }
     def import_from_search(query)
 
@@ -34,7 +35,8 @@ module BggApi
           total_found: 0,
           imported_immediately: [],
           enqueued_count: 0,
-          enqueued_ids: []
+          enqueued_ids: [],
+          importing: false
         }
       end
 
@@ -59,17 +61,25 @@ module BggApi
       # Collect all IDs for background import: remaining search results + related games
       background_ids = (remaining_ids + result[:related_ids]).uniq
 
-      # Enqueue for background import
-      if background_ids.any?
+      # The synchronous batch holds the most-relevant matches and is filtered by the
+      # same rating threshold the background job applies. If none of them imported,
+      # the remaining niche IDs won't either — so don't enqueue a doomed job and
+      # don't tell the client to keep polling.
+      will_import_more = imported_games.any? && background_ids.any?
+
+      if will_import_more
         Rails.logger.info("Enqueueing #{background_ids.length} games for background import (#{remaining_ids.length} from search + #{result[:related_ids].length} related)")
         BggGameImportJob.perform_later(background_ids)
+      elsif background_ids.any?
+        Rails.logger.info("Skipping background import of #{background_ids.length} games: immediate batch imported nothing (all below rating threshold)")
       end
 
       {
         total_found: all_ids.length,
         imported_immediately: imported_games,
-        enqueued_count: background_ids.length,
-        enqueued_ids: background_ids
+        enqueued_count: will_import_more ? background_ids.length : 0,
+        enqueued_ids: will_import_more ? background_ids : [],
+        importing: will_import_more
       }
     rescue BggApi::Client::Error => e
       raise ImportError, "Failed to import games from BGG search: #{e.message}"

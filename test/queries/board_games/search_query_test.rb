@@ -15,6 +15,9 @@ module BoardGames
     end
 
     test "call with name filters by name" do
+      # Local matches are fewer than 5, so the BGG fallback will be invoked
+      @importer.expect(:import_from_search, [], ["catan"])
+
       result = @query.call({ name: "catan" })
 
       assert result.count > 0
@@ -135,13 +138,62 @@ module BoardGames
       assert_equal "Nonexistent Game", result.first.name
     end
 
-    test "does not import from BGG when results are found" do
-      # Use existing game from fixtures
+    test "does not import from BGG when 5 or more results are found" do
+      # Seed enough games matching the query so the local result count >= 5
+      5.times do |i|
+        BoardGame.create!(
+          name: "Plentygame #{i}",
+          year_published: 2020,
+          min_players: 2,
+          max_players: 4,
+          min_playing_time: 30,
+          max_playing_time: 60,
+          rating: 7.0,
+          difficulty_score: 2.0,
+          game_types: [GameType.find_or_create_by!(name: "General")],
+          game_categories: [GameCategory.find_or_create_by!(name: "General")]
+        )
+      end
+
+      result = @query.call({ name: "Plentygame" })
+
+      assert result.count >= 5
+      # No expectations set on @importer, so verify would fail if called
+    end
+
+    test "imports from BGG when fewer than 5 results found" do
+      # Only one fixture matches "catan", which is less than the 5 threshold
+      @importer.expect(:import_from_search, [], ["catan"])
+
       result = @query.call({ name: "catan" })
 
-      # Importer should not be called since we found results
       assert result.count > 0
-      # No expectations set on @importer, so verify would fail if called
+      @importer.verify
+    end
+
+    test "importing? is true when the importer reports more games coming" do
+      @importer.expect(:import_from_search, { importing: true, enqueued_count: 12, enqueued_ids: (1..12).to_a }, ["catan"])
+
+      @query.call({ name: "catan" })
+
+      assert @query.importing?
+      @importer.verify
+    end
+
+    test "importing? is false when the importer reports nothing more to import" do
+      @importer.expect(:import_from_search, { importing: false, enqueued_count: 0, enqueued_ids: [] }, ["catan"])
+
+      @query.call({ name: "catan" })
+
+      refute @query.importing?
+      @importer.verify
+    end
+
+    test "importing? is false when the BGG fallback is not triggered" do
+      # No name filter, so the importer is never called
+      @query.call({})
+
+      refute @query.importing?
     end
 
     test "returns empty when import fails and no local results" do
@@ -196,12 +248,27 @@ module BoardGames
     end
 
     test "works without importer for backward compatibility" do
+      # Seed enough games so the BGG importer is not invoked
+      5.times do |i|
+        BoardGame.create!(
+          name: "Backcompat #{i}",
+          year_published: 2020,
+          min_players: 2,
+          max_players: 4,
+          min_playing_time: 30,
+          max_playing_time: 60,
+          rating: 7.0,
+          difficulty_score: 2.0,
+          game_types: [GameType.find_or_create_by!(name: "General")],
+          game_categories: [GameCategory.find_or_create_by!(name: "General")]
+        )
+      end
+
       query_without_importer = BoardGames::SearchQuery.new
 
-      # Should not raise error
-      result = query_without_importer.call({ name: "catan" })
+      result = query_without_importer.call({ name: "Backcompat" })
 
-      assert result.count > 0
+      assert result.count >= 5
     end
   end
 end

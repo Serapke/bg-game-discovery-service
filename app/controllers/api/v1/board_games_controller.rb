@@ -56,8 +56,9 @@ class Api::V1::BoardGamesController < ApplicationController
   end
 
   def search
-    board_games = ::BoardGames::SearchQuery.new.call(params)
-    render json: ::BoardGames::Serializer.serialize_collection(board_games)
+    query = ::BoardGames::SearchQuery.new
+    board_games = query.call(params)
+    render json: ::BoardGames::Serializer.serialize_collection(board_games, importing: query.importing?)
   rescue ArgumentError => e
     render json: { error: e.message }, status: :bad_request
   end

@@ -4,8 +4,8 @@ module BoardGames
       new.serialize(board_game)
     end
 
-    def self.serialize_collection(board_games)
-      new.serialize_collection(board_games)
+    def self.serialize_collection(board_games, importing: false)
+      new.serialize_collection(board_games, importing: importing)
     end
 
     def serialize(board_game)
@@ -27,10 +27,11 @@ module BoardGames
       }
     end
 
-    def serialize_collection(board_games)
+    def serialize_collection(board_games, importing: false)
       {
         board_games: board_games.map { |game| serialize(game) },
-        total: board_games.count
+        total: board_games.count,
+        importing: importing
       }
     end
   end

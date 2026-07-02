@@ -45,6 +45,7 @@ module BggApi
             assert_equal 20, result[:imported_immediately].length
             assert_equal 5, result[:enqueued_count]
             assert_equal [21, 22, 23, 24, 25], result[:enqueued_ids]
+            assert_equal true, result[:importing]
 
             assert job_called, "Expected BggGameImportJob.perform_later to be called"
             assert_equal [21, 22, 23, 24, 25], remaining_ids
@@ -67,8 +68,49 @@ module BggApi
       assert_equal 0, result[:imported_immediately].length
       assert_equal 0, result[:enqueued_count]
       assert_equal [], result[:enqueued_ids]
+      assert_equal false, result[:importing]
 
       @client.verify
+    end
+
+    test "import_from_search does not enqueue or report importing when immediate batch imports nothing" do
+      # Niche query: BGG returns matches but none clear the rating threshold, so
+      # import_by_ids imports zero games.
+      search_results = {
+        total: 25,
+        items: (1..25).map { |i| { id: i.to_s, type: "boardgame", name: "Bandit #{i}" } }
+      }
+
+      @client.expect(:search, search_results, ["bandit"])
+
+      importer_mock = Minitest::Mock.new
+      importer_mock.expect(:import_by_ids, {
+        imported: [],
+        updated: [],
+        skipped: [],
+        failed: (1..20).map { |i| { bgg_id: i, error: "Not found on BGG" } },
+        related_ids: []
+      }) do |ids, force_update:|
+        ids == (1..20).to_a && force_update == false
+      end
+
+      BggApi::GameImporter.stub :new, importer_mock do
+        job_called = false
+        BggGameImportJob.stub :perform_later, ->(_ids) { job_called = true } do
+          result = @importer.import_from_search("bandit")
+
+          assert_equal 25, result[:total_found]
+          assert_equal 0, result[:imported_immediately].length
+          assert_equal 0, result[:enqueued_count]
+          assert_equal [], result[:enqueued_ids]
+          assert_equal false, result[:importing]
+
+          refute job_called, "Expected no background job when nothing imported immediately"
+        end
+      end
+
+      @client.verify
+      importer_mock.verify
     end
 
     test "import_from_search enqueues related games" do
@@ -114,6 +156,7 @@ module BggApi
             assert_equal 2, result[:imported_immediately].length
             assert_equal 2, result[:enqueued_count]
             assert_equal [12345, 67890], result[:enqueued_ids]
+            assert_equal true, result[:importing]
 
             assert job_called, "Expected BggGameImportJob.perform_later to be called"
             assert_equal [12345, 67890], enqueued_ids
@@ -160,6 +203,7 @@ module BggApi
             # Should enqueue: 5 remaining from search + 3 related
             assert_equal 8, result[:enqueued_count]
             assert_equal [21, 22, 23, 24, 25, 100, 200, 300], result[:enqueued_ids]
+            assert_equal true, result[:importing]
 
             assert job_called, "Expected BggGameImportJob.perform_later to be called"
             # Should be unique and combined
