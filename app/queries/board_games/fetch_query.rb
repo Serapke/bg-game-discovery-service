@@ -27,7 +27,7 @@ module BoardGames
       per_page = DEFAULT_PER_PAGE if per_page <= 0
       per_page = [per_page, MAX_PER_PAGE].min
 
-      base = @relation.includes(:game_types, :game_categories)
+      base = @relation.without_big_boxes.includes(:game_types, :game_categories)
       filtered = apply_filters(base, player_count: player_count, max_playing_time: max_playing_time, game_types: game_types, min_rating: min_rating)
       ordered = filtered.reorder(order_clause(sort))
       total = filtered.except(:includes, :order).count(:id)

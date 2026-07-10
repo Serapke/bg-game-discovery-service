@@ -58,6 +58,9 @@ class BoardGame < ApplicationRecord
   scope :with_min_rating, ->(min_rating) {
     where("board_games.rating >= ?", min_rating) if min_rating.present?
   }
+  scope :without_big_boxes, -> {
+    where.not(id: joins(:outgoing_relations).where(board_game_relations: { relation_type: 'contains' }).select(:id))
+  }
 
   private
 
