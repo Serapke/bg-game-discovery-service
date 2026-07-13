@@ -12,6 +12,7 @@ class Api::V1::BoardGamesController < ApplicationController
         player_count: params[:player_count],
         max_playing_time: params[:max_playing_time],
         game_types: parse_game_types,
+        game_categories: parse_game_categories,
         min_rating: params[:min_rating]
       )
       render json: ::BoardGames::Serializer.serialize_collection(board_games)
@@ -25,6 +26,7 @@ class Api::V1::BoardGamesController < ApplicationController
       player_count: params[:player_count],
       max_playing_time: params[:max_playing_time],
       game_types: parse_game_types,
+      game_categories: parse_game_categories,
       min_rating: params[:min_rating]
     )
     payload = ::BoardGames::Serializer.serialize_collection(result[:records]).merge(
@@ -120,5 +122,10 @@ class Api::V1::BoardGamesController < ApplicationController
   def parse_game_types
     return nil unless params[:game_types].present?
     params[:game_types].to_s.split(',').map(&:strip).reject(&:blank?)
+  end
+
+  def parse_game_categories
+    return nil unless params[:game_categories].present?
+    params[:game_categories].to_s.split(',').map(&:strip).reject(&:blank?)
   end
 end

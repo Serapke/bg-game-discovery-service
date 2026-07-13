@@ -49,8 +49,16 @@ module BoardGames
       scope = apply_playing_time_filters(scope, params)
       types = extract_game_types(params)
       scope = scope.with_game_types(types) if types.any?
+      categories = extract_game_categories(params)
+      scope = scope.with_game_categories(categories) if categories.any?
       scope = scope.with_min_rating(params[:min_rating]) if params[:min_rating].present?
       scope
+    end
+
+    def extract_game_categories(params)
+      raw = params[:game_categories]
+      return [] if raw.blank?
+      Array(raw).flat_map { |c| c.to_s.split(',') }.map(&:strip).reject(&:blank?).uniq
     end
 
     def extract_game_types(params)

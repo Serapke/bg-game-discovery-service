@@ -8,6 +8,7 @@ Rails.application.routes.draw do
   # API routes
   namespace :api do
     namespace :v1 do
+      resources :game_categories, only: [:index]
       resources :board_games, only: [:index, :show] do
         member do
           post :refresh

@@ -55,6 +55,9 @@ class BoardGame < ApplicationRecord
   scope :with_game_types, ->(types) {
     where(id: joins(:game_types).where(game_types: { name: types }).select(:id)) if types.present?
   }
+  scope :with_game_categories, ->(categories) {
+    where(id: joins(:game_categories).where(game_categories: { name: categories }).select(:id)) if categories.present?
+  }
   scope :with_min_rating, ->(min_rating) {
     where("board_games.rating >= ?", min_rating) if min_rating.present?
   }
