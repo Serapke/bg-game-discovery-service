@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_06_15_195941) do
+ActiveRecord::Schema[8.0].define(version: 2026_07_13_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -51,9 +51,13 @@ ActiveRecord::Schema[8.0].define(version: 2026_06_15_195941) do
     t.string "image_url"
     t.string "thumbnail_url"
     t.text "description"
+    t.integer "best_min_players"
+    t.integer "best_max_players"
     t.index ["name"], name: "idx_board_games_name"
     t.index ["rating"], name: "idx_board_games_rating"
     t.index ["rating_count"], name: "idx_board_games_rating_count"
+    t.check_constraint "best_max_players IS NULL OR best_min_players IS NOT NULL AND best_max_players >= best_min_players", name: "board_games_best_max_players_gte_min"
+    t.check_constraint "best_min_players IS NULL OR best_min_players > 0", name: "board_games_best_min_players_positive"
     t.check_constraint "max_players >= min_players", name: "board_games_check"
     t.check_constraint "max_playing_time >= min_playing_time", name: "board_games_check1"
     t.check_constraint "min_players > 0", name: "board_games_min_players_check"

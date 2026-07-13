@@ -307,7 +307,7 @@ module BggApi
         image_url: extract_text_element(item, "image"),
         thumbnail_url: extract_text_element(item, "thumbnail"),
         links: extract_game_links(item)
-      }.compact
+      }.merge(extract_suggested_numplayers(item)).compact
     end
 
     def extract_text_element(item, element_name)
@@ -476,6 +476,41 @@ module BggApi
       end
 
       mapped_type
+    end
+
+    def extract_suggested_numplayers(item)
+      poll = item.elements["poll[@name='suggested_numplayers']"]
+      return { best_min_players: nil, best_max_players: nil } unless poll
+
+      best_counts = []
+      rec_counts = []
+
+      poll.elements.each("results") do |results|
+        numplayers_str = results.attributes["numplayers"]
+        # Skip "5+" style entries — not representable as a single integer
+        next unless numplayers_str =~ /\A\d+\z/
+
+        numplayers = numplayers_str.to_i
+        votes = {}
+        results.elements.each("result") do |result|
+          votes[result.attributes["value"]] = result.attributes["numvotes"].to_i
+        end
+
+        best = votes["Best"] || 0
+        rec = votes["Recommended"] || 0
+        not_rec = votes["Not Recommended"] || 0
+
+        if best > rec && best > not_rec
+          best_counts << numplayers
+        elsif rec > not_rec
+          rec_counts << numplayers
+        end
+      end
+
+      winning_counts = best_counts.presence || rec_counts.presence
+      return { best_min_players: nil, best_max_players: nil } if winning_counts.nil?
+
+      { best_min_players: winning_counts.min, best_max_players: winning_counts.max }
     end
   end
 end

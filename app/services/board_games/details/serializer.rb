@@ -25,6 +25,8 @@ module BoardGames
           game_categories: board_game.game_categories.map(&:name),
           min_players: board_game.min_players,
           max_players: board_game.max_players,
+          best_min_players: board_game.best_min_players,
+          best_max_players: board_game.best_max_players,
           min_playing_time: board_game.min_playing_time,
           max_playing_time: board_game.max_playing_time,
           rating: board_game.rating,

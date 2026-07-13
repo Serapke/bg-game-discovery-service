@@ -176,6 +176,8 @@ module BggApi
         year_published: game_data[:year_published],
         min_players: game_data[:min_players],
         max_players: game_data[:max_players],
+        best_min_players: game_data[:best_min_players],
+        best_max_players: game_data[:best_max_players],
         min_playing_time: game_data[:min_playing_time],
         max_playing_time: game_data[:max_playing_time],
         rating: game_data[:rating],
