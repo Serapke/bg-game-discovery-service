@@ -4,6 +4,17 @@ require "webmock/minitest"
 class Api::V1::BoardGamesControllerTest < ActionDispatch::IntegrationTest
   setup do
     @board_game = board_games(:catan)
+
+    # These tests exercise DB-side filtering, not BGG import. A name search that
+    # matches fewer than 5 fixtures triggers SearchQuery's BGG import fallback,
+    # which would otherwise hit the live BGG API. Default any search request to an
+    # empty BGG response so the fixture matches stand on their own. Individual
+    # tests can register a more specific stub (WebMock prefers the latest match).
+    stub_request(:get, "https://boardgamegeek.com/xmlapi2/search")
+      .with(query: hash_including({}))
+      .to_return(status: 200,
+                 body: '<?xml version="1.0" encoding="utf-8"?><items total="0"></items>',
+                 headers: {})
   end
 
   test "should get index of all board games" do

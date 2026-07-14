@@ -13,6 +13,11 @@ module BggApi
     class ApiError < Error; end
     class ParseError < Error; end
 
+    # Matches YouTube watch/short links and captures the 11-char video ID.
+    # Covers youtube.com/watch?v=<id> (with optional extra query params) and
+    # youtu.be/<id>. Used both to detect YouTube links and to extract the ID.
+    YOUTUBE_LINK_REGEX = %r{(?:youtube\.com/watch\?(?:.*&)?v=|youtu\.be/)([A-Za-z0-9_-]{11})}
+
     # Search for board games on BoardGameGeek
     #
     # @param query [String] the search query
@@ -135,7 +140,7 @@ module BggApi
 
       min_ratings = options[:min_user_ratings] || 10_000
 
-      params = { id: ids.join(","), stats: 1 }
+      params = { id: ids.join(","), stats: 1, videos: 1 }
       response = get("thing", params)
       parse_thing_response(response, min_ratings)
     rescue Faraday::TimeoutError, Faraday::ConnectionFailed, Timeout::Error => e
@@ -306,8 +311,49 @@ module BggApi
         mechanics: extract_links(item, "boardgamemechanic"),
         image_url: extract_text_element(item, "image"),
         thumbnail_url: extract_text_element(item, "thumbnail"),
-        links: extract_game_links(item)
+        links: extract_game_links(item),
+        videos: extract_videos(item)
       }.merge(extract_suggested_numplayers(item)).compact
+    end
+
+    # Extract instructional English YouTube videos from the <videos> block.
+    #
+    # BGG's `thing?videos=1` adds a <videos> element with flat <video> children
+    # carrying id/title/category/language/link attributes. We keep only videos
+    # that are instructional, in English, and hosted on YouTube (the only host
+    # phase 2 can enrich), keyed by the extracted YouTube video ID.
+    #
+    # @return [Array<Hash>] { youtube_video_id:, link:, title:, category:, language: }
+    def extract_videos(item)
+      videos_element = item.elements["videos"]
+      return [] unless videos_element
+
+      seen = Set.new
+      videos = []
+
+      videos_element.elements.each("video") do |video|
+        category = video.attributes["category"]
+        language = video.attributes["language"]
+        next unless category == "instructional" && language == "English"
+
+        link = video.attributes["link"]
+        match = link && YOUTUBE_LINK_REGEX.match(link)
+        next unless match
+
+        youtube_video_id = match[1]
+        next if seen.include?(youtube_video_id)
+        seen << youtube_video_id
+
+        videos << {
+          youtube_video_id: youtube_video_id,
+          link: link,
+          title: video.attributes["title"],
+          category: category,
+          language: language
+        }
+      end
+
+      videos
     end
 
     def extract_text_element(item, element_name)

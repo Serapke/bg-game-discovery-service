@@ -197,12 +197,35 @@ module BggApi
 
       board_game.save!
 
+      # Sync instructional videos parsed from the BGG <videos> block
+      sync_videos(board_game, game_data[:videos])
+
       # Create a BGG association if it doesn't exist
       unless existing
         board_game.create_bgg_board_game_association!(bgg_id: game_data[:id])
       end
 
       board_game
+    end
+
+    # Upsert video rows for a board game, keyed on youtube_video_id so re-imports
+    # (force_update) stay idempotent. Additive only — stale rows are not removed
+    # in phase 1.
+    def sync_videos(board_game, videos_data)
+      return if videos_data.blank?
+
+      videos_data.each do |video_data|
+        video = board_game.videos.find_or_initialize_by(
+          youtube_video_id: video_data[:youtube_video_id]
+        )
+        video.assign_attributes(
+          link: video_data[:link],
+          title: video_data[:title],
+          category: video_data[:category],
+          language: video_data[:language]
+        )
+        video.save!
+      end
     end
 
     def find_board_games_by_bgg_ids(bgg_ids)

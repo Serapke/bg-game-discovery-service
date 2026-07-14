@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_07_13_120000) do
+ActiveRecord::Schema[8.0].define(version: 2026_07_14_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -217,6 +217,18 @@ ActiveRecord::Schema[8.0].define(version: 2026_07_13_120000) do
     t.index ["key"], name: "index_solid_queue_semaphores_on_key", unique: true
   end
 
+  create_table "videos", force: :cascade do |t|
+    t.bigint "board_game_id", null: false
+    t.string "youtube_video_id", null: false
+    t.string "link", null: false
+    t.string "title"
+    t.string "category"
+    t.string "language"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["board_game_id", "youtube_video_id"], name: "idx_videos_unique_per_game", unique: true
+  end
+
   add_foreign_key "bgg_board_game_associations", "board_games", on_delete: :cascade
   add_foreign_key "board_game_relations", "board_games", column: "source_game_id", on_delete: :cascade
   add_foreign_key "board_game_relations", "board_games", column: "target_game_id", on_delete: :cascade
@@ -226,4 +238,5 @@ ActiveRecord::Schema[8.0].define(version: 2026_07_13_120000) do
   add_foreign_key "solid_queue_ready_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_recurring_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_scheduled_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
+  add_foreign_key "videos", "board_games", on_delete: :cascade
 end
