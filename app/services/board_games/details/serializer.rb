@@ -33,7 +33,8 @@ module BoardGames
           rating_count: board_game.rating_count,
           difficulty_score: board_game.difficulty_score,
           image_url: board_game.image_url,
-          thumbnail_url: board_game.thumbnail_url
+          thumbnail_url: board_game.thumbnail_url,
+          videos: serialize_videos(board_game)
         }
 
         RELATION_KEYS.each do |key|
@@ -44,6 +45,28 @@ module BoardGames
       end
 
       private
+
+      # Only enriched (public, playable) videos, most-watched first.
+      def serialize_videos(board_game)
+        board_game.videos
+          .where.not(enriched_at: nil)
+          .order(Arel.sql("view_count DESC NULLS LAST"))
+          .map do |video|
+            {
+              id: video.id,
+              youtube_video_id: video.youtube_video_id,
+              link: video.link,
+              title: video.title,
+              category: video.category,
+              language: video.language,
+              duration_seconds: video.duration_seconds,
+              view_count: video.view_count,
+              like_count: video.like_count,
+              comment_count: video.comment_count,
+              thumbnail_url: video.thumbnail_url
+            }
+          end
+      end
 
       def serialize_summary(games)
         games.map do |game|

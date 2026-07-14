@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_07_14_120000) do
+ActiveRecord::Schema[8.0].define(version: 2026_07_14_130000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -226,6 +226,12 @@ ActiveRecord::Schema[8.0].define(version: 2026_07_14_120000) do
     t.string "language"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.integer "duration_seconds"
+    t.bigint "view_count"
+    t.bigint "like_count"
+    t.bigint "comment_count"
+    t.string "thumbnail_url"
+    t.datetime "enriched_at"
     t.index ["board_game_id", "youtube_video_id"], name: "idx_videos_unique_per_game", unique: true
   end
 

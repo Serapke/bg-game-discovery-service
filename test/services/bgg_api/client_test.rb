@@ -270,7 +270,7 @@ module BggApi
       XML
 
       stub_request(:get, "#{@base_url}/thing")
-        .with(query: { id: "13", stats: 1, videos: 1 })
+        .with(query: { id: "13", stats: 1 })
         .to_return(status: 200, body: xml_response)
 
       result = @client.get_details(13)
@@ -320,7 +320,7 @@ module BggApi
       XML
 
       stub_request(:get, "#{@base_url}/thing")
-        .with(query: { id: "13", stats: 1, videos: 1 })
+        .with(query: { id: "13", stats: 1 })
         .to_return(status: 200, body: xml_response)
 
       game = @client.get_details(13).first
@@ -369,7 +369,7 @@ module BggApi
       XML
 
       stub_request(:get, "#{@base_url}/thing")
-        .with(query: { id: "13,2807", stats: 1, videos: 1 })
+        .with(query: { id: "13,2807", stats: 1 })
         .to_return(status: 200, body: xml_response)
 
       result = @client.get_details([13, 2807])
@@ -419,7 +419,7 @@ module BggApi
       XML
 
       stub_request(:get, "#{@base_url}/thing")
-        .with(query: { id: "13,99999", stats: 1, videos: 1 })
+        .with(query: { id: "13,99999", stats: 1 })
         .to_return(status: 200, body: xml_response)
 
       result = @client.get_details([13, 99999], min_user_ratings: 10000)
@@ -454,7 +454,7 @@ module BggApi
       XML
 
       stub_request(:get, "#{@base_url}/thing")
-        .with(query: { id: "12345", stats: 1, videos: 1 })
+        .with(query: { id: "12345", stats: 1 })
         .to_return(status: 200, body: xml_response)
 
       result = @client.get_details(12345)
@@ -498,7 +498,7 @@ module BggApi
       XML
 
       stub_request(:get, "#{@base_url}/thing")
-        .with(query: { id: "54321", stats: 1, videos: 1 })
+        .with(query: { id: "54321", stats: 1 })
         .to_return(status: 200, body: xml_response)
 
       result = @client.get_details(54321)
@@ -541,7 +541,7 @@ module BggApi
       XML
 
       stub_request(:get, "#{@base_url}/thing")
-        .with(query: { id: "230914", stats: 1, videos: 1 })
+        .with(query: { id: "230914", stats: 1 })
         .to_return(status: 200, body: xml_response)
 
       result = @client.get_details(230914)
@@ -585,7 +585,7 @@ module BggApi
       XML
 
       stub_request(:get, "#{@base_url}/thing")
-        .with(query: { id: "822", stats: 1, videos: 1 })
+        .with(query: { id: "822", stats: 1 })
         .to_return(status: 200, body: xml_response)
 
       result = @client.get_details(822)
@@ -629,7 +629,7 @@ module BggApi
       XML
 
       stub_request(:get, "#{@base_url}/thing")
-        .with(query: { id: "12345", stats: 1, videos: 1 })
+        .with(query: { id: "12345", stats: 1 })
         .to_return(status: 200, body: xml_response)
 
       result = @client.get_details(12345)
@@ -667,7 +667,7 @@ module BggApi
 
     test "get_details handles timeout errors" do
       stub_request(:get, "#{@base_url}/thing")
-        .with(query: { id: "13", stats: 1, videos: 1 })
+        .with(query: { id: "13", stats: 1 })
         .to_timeout
 
       error = assert_raises(BggApi::Client::TimeoutError) do
@@ -679,7 +679,7 @@ module BggApi
 
     test "get_details handles API errors" do
       stub_request(:get, "#{@base_url}/thing")
-        .with(query: { id: "13", stats: 1, videos: 1 })
+        .with(query: { id: "13", stats: 1 })
         .to_return(status: 500, body: "Internal Server Error")
 
       error = assert_raises(BggApi::Client::ApiError) do
@@ -691,7 +691,7 @@ module BggApi
 
     test "get_details handles invalid XML" do
       stub_request(:get, "#{@base_url}/thing")
-        .with(query: { id: "13", stats: 1, videos: 1 })
+        .with(query: { id: "13", stats: 1 })
         .to_return(status: 200, body: "Not valid XML")
 
       error = assert_raises(BggApi::Client::ParseError) do
@@ -725,7 +725,7 @@ module BggApi
       XML
 
       stub_request(:get, "#{@base_url}/thing")
-        .with(query: { id: "99999", stats: 1, videos: 1 })
+        .with(query: { id: "99999", stats: 1 })
         .to_return(status: 200, body: xml_response)
 
       result = @client.get_details(99999, min_user_ratings: 10000)
@@ -751,7 +751,7 @@ module BggApi
       XML
 
       stub_request(:get, "#{@base_url}/thing")
-        .with(query: { id: "12345", stats: 1, videos: 1 })
+        .with(query: { id: "12345", stats: 1 })
         .to_return(status: 200, body: xml_response)
 
       result = @client.get_details(12345)
@@ -797,7 +797,7 @@ module BggApi
       XML
 
       stub_request(:get, "#{@base_url}/thing")
-        .with(query: { id: "13", stats: 1, videos: 1 })
+        .with(query: { id: "13", stats: 1 })
         .to_return(status: 200, body: xml_response)
 
       result = @client.get_details(13)
@@ -838,7 +838,7 @@ module BggApi
       XML
 
       stub_request(:get, "#{@base_url}/thing")
-        .with(query: { id: "99999", stats: 1, videos: 1 })
+        .with(query: { id: "99999", stats: 1 })
         .to_return(status: 200, body: xml_response)
 
       result = @client.get_details(99999)
@@ -876,7 +876,7 @@ module BggApi
       XML
 
       stub_request(:get, "#{@base_url}/thing")
-        .with(query: { id: "12345", stats: 1, videos: 1 })
+        .with(query: { id: "12345", stats: 1 })
         .to_return(status: 200, body: xml_response)
 
       result = @client.get_details(12345)
@@ -887,93 +887,87 @@ module BggApi
       assert_equal [], game[:types]
     end
 
-    # Tests for <videos> parsing in get_details
+    # Tests for get_videos (BGG paginated videos AJAX endpoint)
 
-    def thing_with_videos(videos_xml)
-      <<~XML
-        <?xml version="1.0" encoding="utf-8"?>
-        <items termsofuse="https://boardgamegeek.com/xmlapi/termsofuse">
-          <item type="boardgame" id="13">
-            <name type="primary" value="Catan"/>
-            <yearpublished value="1995"/>
-            <minplayers value="3"/>
-            <maxplayers value="4"/>
-            <playingtime value="120"/>
-            #{videos_xml}
-            <statistics>
-              <ratings>
-                <usersrated value="50000"/>
-                <average value="7.12"/>
-                <averageweight value="2.35"/>
-              </ratings>
-            </statistics>
-          </item>
-        </items>
-      XML
+    def stub_get_videos(bgg_id, videos)
+      geekdo_url = BggApi::GEEKDO_BASE_URL.chomp("/")
+      stub_request(:get, "#{geekdo_url}/api/videos")
+        .with(query: hash_including(
+          "objectid" => bgg_id.to_s, "objecttype" => "thing",
+          "gallery" => "instructional", "sort" => "hot"
+        ))
+        .to_return(
+          status: 200,
+          headers: { "Content-Type" => "application/json" },
+          body: { videos: videos }.to_json
+        )
     end
 
-    def get_details_videos(videos_xml)
-      stub_request(:get, "#{@base_url}/thing")
-        .with(query: { id: "13", stats: 1, videos: 1 })
-        .to_return(status: 200, body: thing_with_videos(videos_xml))
-      @client.get_details(13).first[:videos]
+    def video_item(ext_id, overrides = {})
+      {
+        extvideoid: ext_id,
+        videohost: "youtube",
+        language: "English",
+        title: "How to Play",
+        href: "/video/1/game/how-to-play"
+      }.merge(overrides)
     end
 
-    test "get_details keeps only instructional English YouTube videos and extracts IDs" do
-      videos = get_details_videos(<<~VIDEOS)
-        <videos total="4">
-          <video id="1" title="How to Play Catan" category="instructional" language="English"
-                 link="https://www.youtube.com/watch?v=8Nx6Jij2q3s"/>
-          <video id="2" title="Catan en français" category="instructional" language="French"
-                 link="https://www.youtube.com/watch?v=aaaaaaaaaaa"/>
-          <video id="3" title="Catan Review" category="review" language="English"
-                 link="https://www.youtube.com/watch?v=bbbbbbbbbbb"/>
-          <video id="4" title="Short Rules" category="instructional" language="English"
-                 link="https://youtu.be/CcCcCcCcCcC"/>
-        </videos>
-      VIDEOS
+    test "get_videos keeps only English YouTube videos and builds watch links" do
+      stub_get_videos(13, [
+        video_item("8Nx6Jij2q3s", title: "How to Play Catan"),
+        video_item("aaaaaaaaaaa", language: "French"),
+        video_item("bbbbbbbbbbb", videohost: "vimeo"),
+        video_item("CcCcCcCcCcC", title: "Learn Catan")
+      ])
 
-      assert_equal 2, videos.length
+      videos = @client.get_videos(13)
+
       assert_equal(
         [
           { youtube_video_id: "8Nx6Jij2q3s", link: "https://www.youtube.com/watch?v=8Nx6Jij2q3s",
             title: "How to Play Catan", category: "instructional", language: "English" },
-          { youtube_video_id: "CcCcCcCcCcC", link: "https://youtu.be/CcCcCcCcCcC",
-            title: "Short Rules", category: "instructional", language: "English" }
+          { youtube_video_id: "CcCcCcCcCcC", link: "https://www.youtube.com/watch?v=CcCcCcCcCcC",
+            title: "Learn Catan", category: "instructional", language: "English" }
         ],
         videos
       )
     end
 
-    test "get_details filters out non-YouTube instructional English videos" do
-      videos = get_details_videos(<<~VIDEOS)
-        <videos total="1">
-          <video id="1" title="How to Play (Vimeo)" category="instructional" language="English"
-                 link="https://vimeo.com/123456789"/>
-        </videos>
-      VIDEOS
+    test "get_videos de-dupes repeated video IDs" do
+      stub_get_videos(13, [
+        video_item("8Nx6Jij2q3s"),
+        video_item("8Nx6Jij2q3s", title: "dup")
+      ])
 
-      assert_empty videos
-    end
-
-    test "get_details de-dupes repeated YouTube video IDs within an item" do
-      videos = get_details_videos(<<~VIDEOS)
-        <videos total="2">
-          <video id="1" title="How to Play" category="instructional" language="English"
-                 link="https://www.youtube.com/watch?v=8Nx6Jij2q3s"/>
-          <video id="2" title="How to Play (dup)" category="instructional" language="English"
-                 link="https://youtu.be/8Nx6Jij2q3s"/>
-        </videos>
-      VIDEOS
-
+      videos = @client.get_videos(13)
       assert_equal 1, videos.length
       assert_equal "8Nx6Jij2q3s", videos.first[:youtube_video_id]
     end
 
-    test "get_details returns empty videos when no videos block present" do
-      videos = get_details_videos("")
+    test "get_videos returns [] when the endpoint has no videos" do
+      stub_get_videos(13, [])
+      assert_equal [], @client.get_videos(13)
+    end
 
-      assert_equal [], videos
+    test "get_videos raises ApiError on an HTTP error" do
+      geekdo_url = BggApi::GEEKDO_BASE_URL.chomp("/")
+      stub_request(:get, "#{geekdo_url}/api/videos").with(query: hash_including({}))
+        .to_return(status: 500, body: "error")
+      assert_raises(BggApi::Client::ApiError) { @client.get_videos(13) }
+    end
+
+    test "get_videos raises TimeoutError on a timeout" do
+      geekdo_url = BggApi::GEEKDO_BASE_URL.chomp("/")
+      stub_request(:get, "#{geekdo_url}/api/videos").with(query: hash_including({})).to_timeout
+      assert_raises(BggApi::Client::TimeoutError) { @client.get_videos(13) }
+    end
+
+    test "get_videos raises ParseError on invalid JSON" do
+      geekdo_url = BggApi::GEEKDO_BASE_URL.chomp("/")
+      stub_request(:get, "#{geekdo_url}/api/videos").with(query: hash_including({}))
+        .to_return(status: 200, body: "not json")
+      assert_raises(BggApi::Client::ParseError) { @client.get_videos(13) }
     end
   end
 end

@@ -13,10 +13,9 @@ module BggApi
     class ApiError < Error; end
     class ParseError < Error; end
 
-    # Matches YouTube watch/short links and captures the 11-char video ID.
-    # Covers youtube.com/watch?v=<id> (with optional extra query params) and
-    # youtu.be/<id>. Used both to detect YouTube links and to extract the ID.
-    YOUTUBE_LINK_REGEX = %r{(?:youtube\.com/watch\?(?:.*&)?v=|youtu\.be/)([A-Za-z0-9_-]{11})}
+    # Page size for the videos AJAX endpoint. BGG caps this at 50 per page
+    # (larger values are ignored); we fetch only page 1, sorted by popularity.
+    VIDEO_PAGE_SIZE = 50
 
     # Search for board games on BoardGameGeek
     #
@@ -117,7 +116,7 @@ module BggApi
     # @param bgg_id [Integer] the BGG ID of the game
     # @return [Array<Integer>] array of recommended BGG IDs
     def get_recommendations(bgg_id)
-      response = recommendations_connection.get("api/geekitem/recs", {
+      response = geekdo_connection.get("api/geekitem/recs", {
         ajax: 1, objectid: bgg_id, objecttype: "thing", pageid: 1
       })
       body = JSON.parse(response.body)
@@ -133,6 +132,35 @@ module BggApi
       raise ParseError, "Failed to parse BGG recs API response: #{e.message}"
     end
 
+    # Fetch instructional English YouTube videos for a game from BGG's paginated
+    # videos AJAX endpoint (api.geekdo.com). Unlike thing?videos=1 — which is capped
+    # at ~15 videos and ignores paging — this returns the full instructional gallery.
+    # We fetch only page 1, sorted by popularity ("hot"), so the best candidates
+    # surface first and cost stays at one request per game.
+    #
+    # @param bgg_id [Integer] the BGG ID of the game
+    # @return [Array<Hash>] { youtube_video_id:, link:, title:, category:, language: }
+    def get_videos(bgg_id)
+      response = geekdo_connection.get("api/videos", {
+        objectid: bgg_id,
+        objecttype: "thing",
+        gallery: "instructional",
+        sort: "hot",
+        pageid: 1,
+        showcount: VIDEO_PAGE_SIZE
+      })
+      parse_videos_response(JSON.parse(response.body))
+    rescue Faraday::TimeoutError, Faraday::ConnectionFailed, Timeout::Error => e
+      raise TimeoutError, "Request to BGG videos API timed out: #{e.message}"
+    rescue Faraday::Error => e
+      if e.message.include?("execution expired") || e.message.include?("timeout")
+        raise TimeoutError, "Request to BGG videos API timed out: #{e.message}"
+      end
+      raise ApiError, "BGG videos API request failed: #{e.message}"
+    rescue JSON::ParserError => e
+      raise ParseError, "Failed to parse BGG videos API response: #{e.message}"
+    end
+
     def get_details(ids, options = {})
       ids = Array(ids)
       raise ArgumentError, "ids cannot be empty" if ids.empty?
@@ -140,7 +168,7 @@ module BggApi
 
       min_ratings = options[:min_user_ratings] || 10_000
 
-      params = { id: ids.join(","), stats: 1, videos: 1 }
+      params = { id: ids.join(","), stats: 1 }
       response = get("thing", params)
       parse_thing_response(response, min_ratings)
     rescue Faraday::TimeoutError, Faraday::ConnectionFailed, Timeout::Error => e
@@ -170,8 +198,9 @@ module BggApi
       end
     end
 
-    def recommendations_connection
-      @recommendations_connection ||= Faraday.new(
+    # Shared connection for BGG's geekdo AJAX APIs (recommendations, videos).
+    def geekdo_connection
+      @geekdo_connection ||= Faraday.new(
         url: BggApi::GEEKDO_BASE_URL,
         request: {
           timeout: BggApi::TIMEOUT,
@@ -311,49 +340,38 @@ module BggApi
         mechanics: extract_links(item, "boardgamemechanic"),
         image_url: extract_text_element(item, "image"),
         thumbnail_url: extract_text_element(item, "thumbnail"),
-        links: extract_game_links(item),
-        videos: extract_videos(item)
+        links: extract_game_links(item)
       }.merge(extract_suggested_numplayers(item)).compact
     end
 
-    # Extract instructional English YouTube videos from the <videos> block.
-    #
-    # BGG's `thing?videos=1` adds a <videos> element with flat <video> children
-    # carrying id/title/category/language/link attributes. We keep only videos
-    # that are instructional, in English, and hosted on YouTube (the only host
-    # phase 2 can enrich), keyed by the extracted YouTube video ID.
+    # Parse the videos AJAX endpoint response into the video hash shape consumed by
+    # GameImporter#sync_videos. The `gallery=instructional` request param already
+    # scopes to instructional videos server-side; here we keep only English videos
+    # hosted on YouTube (the only host phase 2 can enrich), de-duped by video ID.
     #
     # @return [Array<Hash>] { youtube_video_id:, link:, title:, category:, language: }
-    def extract_videos(item)
-      videos_element = item.elements["videos"]
-      return [] unless videos_element
+    def parse_videos_response(body)
+      items = body.is_a?(Hash) ? body["videos"] : nil
+      return [] unless items.is_a?(Array)
 
       seen = Set.new
-      videos = []
+      items.each_with_object([]) do |video, acc|
+        next unless video["videohost"] == "youtube"
+        next unless video["language"] == "English"
 
-      videos_element.elements.each("video") do |video|
-        category = video.attributes["category"]
-        language = video.attributes["language"]
-        next unless category == "instructional" && language == "English"
-
-        link = video.attributes["link"]
-        match = link && YOUTUBE_LINK_REGEX.match(link)
-        next unless match
-
-        youtube_video_id = match[1]
-        next if seen.include?(youtube_video_id)
+        youtube_video_id = video["extvideoid"]
+        next if youtube_video_id.blank? || seen.include?(youtube_video_id)
         seen << youtube_video_id
 
-        videos << {
+        acc << {
+          # `href` is a BGG-internal path, not a YouTube URL — build the watch link.
           youtube_video_id: youtube_video_id,
-          link: link,
-          title: video.attributes["title"],
-          category: category,
-          language: language
+          link: "https://www.youtube.com/watch?v=#{youtube_video_id}",
+          title: video["title"],
+          category: "instructional",
+          language: video["language"]
         }
       end
-
-      videos
     end
 
     def extract_text_element(item, element_name)

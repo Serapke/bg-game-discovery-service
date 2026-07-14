@@ -34,6 +34,7 @@ services:
       - RAILS_MAX_THREADS=${RAILS_MAX_THREADS:-5}
       - PORT=3002
       - BGG_API_TOKEN=${BGG_API_TOKEN}
+      - YOUTUBE_API_KEY=${YOUTUBE_API_KEY}
       - RECOMMENDER_SERVICE_URL=${RECOMMENDER_SERVICE_URL:-http://host.docker.internal:3004}
     ports:
       - "3002:3002"
@@ -63,6 +64,7 @@ services:
       - POSTGRES_PORT=5432
       - RAILS_MAX_THREADS=${RAILS_MAX_THREADS:-5}
       - BGG_API_TOKEN=${BGG_API_TOKEN}
+      - YOUTUBE_API_KEY=${YOUTUBE_API_KEY}
       - RECOMMENDER_SERVICE_URL=${RECOMMENDER_SERVICE_URL:-http://host.docker.internal:3004}
     volumes:
       - .:/app

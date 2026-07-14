@@ -5,8 +5,14 @@ module BggApi
   class GameImporter
     class ImportError < StandardError; end
 
-    def initialize(client: BggApi::Client.new, event_publisher: Recommendations::EventPublisher.new)
+    # Videos below this view count are dropped during enrichment — they tend to be
+    # low-quality/noise, and we only want to surface videos worth watching.
+    MIN_VIDEO_VIEW_COUNT = 10_000
+
+    def initialize(client: BggApi::Client.new, youtube_client: YoutubeApi::Client.new,
+                   event_publisher: Recommendations::EventPublisher.new)
       @client = client
+      @youtube_client = youtube_client
       @event_publisher = event_publisher
     end
 
@@ -197,8 +203,8 @@ module BggApi
 
       board_game.save!
 
-      # Sync instructional videos parsed from the BGG <videos> block
-      sync_videos(board_game, game_data[:videos])
+      # Sync instructional videos fetched from BGG's paginated videos AJAX endpoint
+      sync_videos(board_game, fetch_videos(game_data[:id]))
 
       # Create a BGG association if it doesn't exist
       unless existing
@@ -208,9 +214,19 @@ module BggApi
       board_game
     end
 
+    # Fetch a game's instructional videos from BGG's videos AJAX endpoint. Fails
+    # soft: a videos-endpoint outage must not roll back the core game import, so we
+    # log and return [] (no videos synced this run; picked up on the next import).
+    def fetch_videos(bgg_id)
+      @client.get_videos(bgg_id)
+    rescue BggApi::Client::Error => e
+      Rails.logger.warn("Failed to fetch videos for BGG game #{bgg_id}: #{e.message}")
+      []
+    end
+
     # Upsert video rows for a board game, keyed on youtube_video_id so re-imports
-    # (force_update) stay idempotent. Additive only — stale rows are not removed
-    # in phase 1.
+    # (force_update) stay idempotent. After upserting the link-only rows (phase 1),
+    # enrich them with YouTube stats (phase 2).
     def sync_videos(board_game, videos_data)
       return if videos_data.blank?
 
@@ -226,6 +242,55 @@ module BggApi
         )
         video.save!
       end
+
+      enrich_videos(board_game)
+    end
+
+    # Augment a game's video rows with YouTube Data API stats. Public, processed
+    # videos with enough views get their stats + enriched_at set; non-public,
+    # unprocessed, deleted, or low-view videos are removed so the table only holds
+    # playable, worth-watching videos.
+    #
+    # Fails soft: if the YouTube call errors (quota, timeout, network, or no API
+    # key), rows are left as link-only (enriched_at nil), nothing is deleted, and
+    # the core BGG import continues.
+    def enrich_videos(board_game)
+      videos = board_game.videos.to_a
+      return if videos.empty?
+
+      details = @youtube_client.get_video_details(videos.map(&:youtube_video_id))
+
+      videos.each do |video|
+        data = details[video.youtube_video_id]
+
+        if keep_video?(data)
+          video.update!(
+            duration_seconds: data[:duration_seconds],
+            view_count: data[:view_count],
+            like_count: data[:like_count],
+            comment_count: data[:comment_count],
+            thumbnail_url: data[:thumbnail_url],
+            enriched_at: Time.current
+          )
+        else
+          # Non-public/unprocessed, absent from the response (deleted), or below the
+          # view-count floor — drop it.
+          video.destroy!
+        end
+      end
+    rescue YoutubeApi::Client::Error => e
+      Rails.logger.warn(
+        "YouTube enrichment failed for board game #{board_game.id}, keeping link-only rows: #{e.message}"
+      )
+    end
+
+    # A video is kept only if YouTube returned it as public, fully processed, and
+    # with at least MIN_VIDEO_VIEW_COUNT views (nil view count fails the floor).
+    def keep_video?(data)
+      return false unless data
+      return false unless data[:privacy_status] == "public" && data[:upload_status] == "processed"
+
+      data[:view_count].to_i >= MIN_VIDEO_VIEW_COUNT
     end
 
     def find_board_games_by_bgg_ids(bgg_ids)

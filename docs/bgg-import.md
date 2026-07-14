@@ -35,6 +35,8 @@ Low-level Faraday HTTP client for the BGG XML API2.
 |---|---|---|
 | `search(query)` | `/search` | Find games by name, returns id/name/year |
 | `get_details(ids)` | `/thing` | Fetch full data for up to 20 BGG IDs |
+| `get_recommendations(id)` | `api.geekdo.com/api/geekitem/recs` | Recommended games for a game |
+| `get_videos(id)` | `api.geekdo.com/api/videos` | Instructional videos for a game (page 1, sorted by popularity) |
 
 Configuration via env vars:
 
@@ -46,6 +48,35 @@ Configuration via env vars:
 | `BGG_API_TOKEN` | _(optional bearer token)_ |
 
 Errors raised: `TimeoutError`, `ApiError`, `ParseError`.
+
+### `YoutubeApi::Client` — `app/services/youtube_api/client.rb`
+
+Low-level Faraday client for the [YouTube Data API v3](https://developers.google.com/youtube/v3/docs/videos/list). Used to enrich imported video rows (see phase 2 below).
+
+| Method | YouTube endpoint | Purpose |
+|---|---|---|
+| `get_video_details(ids)` | `/videos` | Fetch stats/status for up to 50 YouTube IDs (1 quota unit/call) |
+
+Configuration via env vars:
+
+| Variable | Default |
+|---|---|
+| `YOUTUBE_API_BASE_URL` | `https://www.googleapis.com/youtube/v3/` |
+| `YOUTUBE_API_TIMEOUT` | `10` seconds |
+| `YOUTUBE_API_OPEN_TIMEOUT` | `5` seconds |
+| `YOUTUBE_API_KEY` | **required for enrichment** — enable "YouTube Data API v3" in Google Cloud and create an API key |
+
+Errors raised: `TimeoutError`, `ApiError`, `ParseError`. Without a valid `YOUTUBE_API_KEY`, enrichment fails soft (see below) — the core BGG import is never blocked.
+
+### Video enrichment (phase 2)
+
+During import, `GameImporter` fetches a game's instructional videos via `BggApi::Client#get_videos` — which calls BGG's paginated videos AJAX endpoint (`api.geekdo.com/api/videos`, `gallery=instructional&sort=hot`, page 1). This replaces the old `thing?videos=1` block, which was hard-capped at ~15 videos and ignored paging (a popular game like Carcassonne has hundreds). The client keeps only English, YouTube-hosted videos. `GameImporter#sync_videos` upserts these as rows, then calls `YoutubeApi::Client#get_video_details` to augment each with `duration_seconds`, `view_count`, `like_count`, `comment_count`, `thumbnail_url`, and `enriched_at`.
+
+Video fetching fails soft too: if the videos AJAX endpoint errors, the game import still succeeds with no videos synced this run (retried on the next import).
+
+- Videos that YouTube reports as non-public (`privacyStatus != "public"`) or not fully processed (`uploadStatus != "processed"`), that are absent from the response (deleted), or that have fewer than `MIN_VIDEO_VIEW_COUNT` (10,000) views are **removed** from the table — only public, playable, worth-watching videos are kept.
+- If the YouTube call fails (quota exceeded, timeout, network), enrichment **fails soft**: the link-only row is kept with `enriched_at` null and no rows are deleted. The core BGG import always succeeds; enrichment retries on the next import/refresh of that game.
+- Enrichment runs at import time only — a game refresh (`force_update`) re-enriches. There is no periodic re-sync, so view/like counts reflect the last import.
 
 ### `BggApi::GameImporter` — `app/services/bgg_api/game_importer.rb`
 
