@@ -99,6 +99,14 @@ GEM
       logger
     faraday-net_http (3.4.2)
       net-http (~> 0.5)
+    ffi (1.17.4-aarch64-linux-gnu)
+    ffi (1.17.4-aarch64-linux-musl)
+    ffi (1.17.4-arm-linux-gnu)
+    ffi (1.17.4-arm-linux-musl)
+    ffi (1.17.4-arm64-darwin)
+    ffi (1.17.4-x86_64-darwin)
+    ffi (1.17.4-x86_64-linux-gnu)
+    ffi (1.17.4-x86_64-linux-musl)
     fugit (1.12.1)
       et-orbi (~> 1.4)
       raabro (~> 1.4)
@@ -107,6 +115,9 @@ GEM
     hashdiff (1.2.1)
     i18n (1.14.7)
       concurrent-ruby (~> 1.0)
+    image_processing (1.14.0)
+      mini_magick (>= 4.9.5, < 6)
+      ruby-vips (>= 2.0.17, < 3)
     io-console (0.8.1)
     irb (1.15.3)
       pp (>= 0.6.0)
@@ -124,6 +135,8 @@ GEM
       net-pop
       net-smtp
     marcel (1.1.0)
+    mini_magick (5.3.2)
+      logger
     mini_mime (1.1.5)
     minitest (5.26.1)
     net-http (0.7.0)
@@ -221,6 +234,9 @@ GEM
     reline (0.6.2)
       io-console (~> 0.5)
     rexml (3.4.4)
+    ruby-vips (2.3.0)
+      ffi (~> 1.12)
+      logger
     securerandom (0.4.1)
     solid_queue (1.2.4)
       activejob (>= 7.1)
@@ -262,6 +278,7 @@ PLATFORMS
 DEPENDENCIES
   debug
   faraday (~> 2.7)
+  image_processing (~> 1.2)
   pg (~> 1.1)
   puma (>= 5.0)
   rack-cors

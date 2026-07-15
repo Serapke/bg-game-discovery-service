@@ -18,6 +18,7 @@ Rails.application.routes.draw do
           get :trending
           get :related_ids
         end
+        resources :photos, only: [:index, :create, :destroy], controller: 'game_photos'
       end
     end
   end

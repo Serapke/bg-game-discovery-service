@@ -9,6 +9,9 @@ Rails.application.configure do
   # Eager load code on boot for better performance and memory savings (ignored by Rake tasks).
   config.eager_load = true
 
+  # Store uploaded files on the local file system (see config/storage.yml).
+  config.active_storage.service = :local
+
   # Full error reports are disabled.
   config.consider_all_requests_local = false
 
