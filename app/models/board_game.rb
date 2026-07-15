@@ -1,4 +1,11 @@
 class BoardGame < ApplicationRecord
+  # Weights for the "recommended" score: a blend of normalized rating and a
+  # log-scaled popularity boost, so a handful of high ratings can't outrank a
+  # genuinely well-liked, widely-rated game. Kept here as the single source of
+  # truth; BoardGames::FetchQuery mirrors the same split in SQL.
+  RECOMMENDED_RATING_WEIGHT = 0.7
+  RECOMMENDED_POPULARITY_WEIGHT = 0.3
+
   has_many :board_game_game_types, dependent: :destroy
   has_many :game_types, through: :board_game_game_types
   has_and_belongs_to_many :game_categories
@@ -65,6 +72,19 @@ class BoardGame < ApplicationRecord
   scope :without_big_boxes, -> {
     where.not(id: joins(:outgoing_relations).where(board_game_relations: { relation_type: 'contains' }).select(:id))
   }
+
+  # Recommended score in [0, 1]: 0.7 * (rating / 10) + 0.3 * log-scaled popularity.
+  # +max_rating_count+ is the normalizer the popularity term is scaled against
+  # (e.g. the most-rated game within a comparison set). Mirrors the SQL in
+  # BoardGames::FetchQuery#order_clause, except the normalizer there is the
+  # global MAX(rating_count) rather than a per-set max.
+  def recommended_score(max_rating_count:)
+    normalized_rating = (rating || 0) / 10.0
+    popularity = Math.log(1 + (rating_count || 0)) /
+                 [Math.log(1 + max_rating_count.to_i), 1].max
+    RECOMMENDED_RATING_WEIGHT * normalized_rating +
+      RECOMMENDED_POPULARITY_WEIGHT * popularity
+  end
 
   private
 

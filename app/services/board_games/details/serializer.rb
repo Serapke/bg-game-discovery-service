@@ -38,7 +38,9 @@ module BoardGames
         }
 
         RELATION_KEYS.each do |key|
-          payload[key] = serialize_summary(board_game.public_send(key))
+          games = board_game.public_send(key).to_a
+          games = sort_by_recommended(games) if key == :expansions
+          payload[key] = serialize_summary(games)
         end
 
         payload
@@ -66,6 +68,18 @@ module BoardGames
               thumbnail_url: video.thumbnail_url
             }
           end
+      end
+
+      # Surface genuinely well-regarded expansions first rather than DB insertion
+      # order. Popularity is normalized against the most-rated expansion in this
+      # set, so scoring stays self-contained (no global query). Ties (e.g. all
+      # unrated) fall back to newest first.
+      def sort_by_recommended(games)
+        max_rating_count = games.map { |g| g.rating_count.to_i }.max || 0
+        games.sort_by do |game|
+          [-game.recommended_score(max_rating_count: max_rating_count),
+           -(game.year_published || 0)]
+        end
       end
 
       def serialize_summary(games)

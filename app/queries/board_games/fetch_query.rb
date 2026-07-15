@@ -47,9 +47,14 @@ module BoardGames
       when 'difficulty'
         Arel.sql('board_games.difficulty_score DESC NULLS LAST, board_games.id ASC')
       else # 'recommended'
+        # Mirrors BoardGame#recommended_score. Here the popularity term is
+        # normalized against the global MAX(rating_count); the in-memory version
+        # normalizes against a per-set max instead.
+        rating_weight = BoardGame::RECOMMENDED_RATING_WEIGHT
+        popularity_weight = BoardGame::RECOMMENDED_POPULARITY_WEIGHT
         Arel.sql(<<~SQL.squish)
-          (0.7 * COALESCE(board_games.rating, 0) / 10.0
-           + 0.3 * LN(1 + COALESCE(board_games.rating_count, 0))
+          (#{rating_weight} * COALESCE(board_games.rating, 0) / 10.0
+           + #{popularity_weight} * LN(1 + COALESCE(board_games.rating_count, 0))
                  / GREATEST(LN(1 + (SELECT MAX(rating_count) FROM board_games)), 1)
           ) DESC, board_games.id ASC
         SQL

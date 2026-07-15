@@ -68,6 +68,59 @@ module BoardGames
         end
       end
 
+      test "serialize sorts expansions by recommended score, not insertion order" do
+        game_type = GameType.first || GameType.create!(name: "Strategy")
+        game_category = GameCategory.first || GameCategory.create!(name: "Economic")
+
+        # Inserted noisy-first: a 9.5/10 with a handful of ratings should NOT
+        # outrank a slightly-lower rating backed by thousands of ratings.
+        noisy = BoardGame.create!(
+          name: "Noisy Expansion", year_published: 2022,
+          min_players: 2, max_players: 4, rating: 9.5, rating_count: 3,
+          game_types: [game_type], game_categories: [game_category]
+        )
+        beloved = BoardGame.create!(
+          name: "Beloved Expansion", year_published: 2018,
+          min_players: 2, max_players: 4, rating: 8.5, rating_count: 5000,
+          game_types: [game_type], game_categories: [game_category]
+        )
+
+        [noisy, beloved].each do |exp|
+          BoardGameRelation.create!(source_game: exp, target_game: @board_game, relation_type: :expands)
+        end
+
+        result = BoardGames::Details::Serializer.serialize(@board_game.reload)
+        names = result[:expansions].map { |e| e[:name] }
+
+        assert_equal ["Beloved Expansion", "Noisy Expansion"], names.first(2)
+      end
+
+      test "serialize breaks expansion ties by newest year when all unrated" do
+        game_type = GameType.first || GameType.create!(name: "Strategy")
+        game_category = GameCategory.first || GameCategory.create!(name: "Economic")
+
+        older = BoardGame.create!(
+          name: "Older Unrated", year_published: 2015,
+          min_players: 2, max_players: 4,
+          game_types: [game_type], game_categories: [game_category]
+        )
+        newer = BoardGame.create!(
+          name: "Newer Unrated", year_published: 2021,
+          min_players: 2, max_players: 4,
+          game_types: [game_type], game_categories: [game_category]
+        )
+
+        # Insert older-first so a stable sort wouldn't reorder on its own.
+        [older, newer].each do |exp|
+          BoardGameRelation.create!(source_game: exp, target_game: @board_game, relation_type: :expands)
+        end
+
+        result = BoardGames::Details::Serializer.serialize(@board_game.reload)
+        names = result[:expansions].map { |e| e[:name] }
+
+        assert_equal ["Newer Unrated", "Older Unrated"], names.first(2)
+      end
+
       test "serialize handles board game without expansions" do
         game_type = GameType.create!(name: "test_type")
         game_category = GameCategory.create!(name: "test_category")
