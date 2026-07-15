@@ -231,6 +231,9 @@ module BggApi
       return if videos_data.blank?
 
       videos_data.each do |video_data|
+        # A video without a title has nothing to render in the UI; skip it.
+        next if video_data[:title].blank?
+
         video = board_game.videos.find_or_initialize_by(
           youtube_video_id: video_data[:youtube_video_id]
         )
