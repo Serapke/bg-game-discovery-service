@@ -52,7 +52,45 @@ module BoardGames
       categories = extract_game_categories(params)
       scope = scope.with_game_categories(categories) if categories.any?
       scope = scope.with_min_rating(params[:min_rating]) if params[:min_rating].present?
-      scope
+      apply_search_ordering(scope, params[:name])
+    end
+
+    # Order results so base games rank ahead of their expansions, and within
+    # each group by relevance to the typed query, then name.
+    #
+    # A game counts as an expansion when it has an outgoing +expands+ relation
+    # (its id appears as source_game_id in board_game_relations). A correlated
+    # EXISTS subquery is used rather than a LEFT JOIN so games with multiple base
+    # games don't produce duplicate rows.
+    #
+    # The relevance tier keeps an exact name match ahead of prefix matches, and
+    # prefix matches ahead of games that merely contain the query. Without it,
+    # a plain name sort surfaces e.g. "A Game of Thrones: Catan" above "Catan"
+    # for the query "catan". Only applied when a name filter is present.
+    def apply_search_ordering(scope, name)
+      scope = scope.order(Arel.sql(<<~SQL.squish))
+        (CASE WHEN EXISTS (
+           SELECT 1 FROM board_game_relations r
+           WHERE r.source_game_id = board_games.id
+             AND r.relation_type = 'expands') THEN 1 ELSE 0 END) ASC
+      SQL
+
+      if name.present?
+        scope = scope.order(
+          Arel.sql(sanitize_sql([<<~SQL.squish, { exact: name, prefix: "#{name}%" }]))
+            (CASE
+               WHEN board_games.name ILIKE :exact THEN 0
+               WHEN board_games.name ILIKE :prefix THEN 1
+               ELSE 2 END) ASC
+          SQL
+        )
+      end
+
+      scope.order(Arel.sql('board_games.name ASC'))
+    end
+
+    def sanitize_sql(condition)
+      ActiveRecord::Base.sanitize_sql_array(condition)
     end
 
     def extract_game_categories(params)

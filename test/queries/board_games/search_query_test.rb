@@ -109,6 +109,57 @@ module BoardGames
       assert_includes result, catan
     end
 
+    test "ranks base games ahead of their expansions" do
+      base = create_game("Zzz Wonders")
+      expansion = create_game("Aaa Wonders Expansion")
+      BoardGameRelation.create!(source_game: expansion, target_game: base, relation_type: 'expands')
+
+      # Enough matches so the BGG fallback is not triggered
+      3.times { |i| create_game("Filler Wonders #{i}") }
+
+      result = @query.call({ name: "Wonders" }).to_a
+
+      assert_operator result.index(base), :<, result.index(expansion),
+        "base game should sort before its expansion despite alphabetical name"
+    end
+
+    test "orders games by name within the base/expansion split" do
+      last = create_game("Zeta Realms")
+      first = create_game("Alpha Realms")
+      3.times { |i| create_game("Mid Realms #{i}") }
+
+      result = @query.call({ name: "Realms" }).to_a
+      names = result.map(&:name)
+
+      assert_equal names.sort, names, "non-expansion results should be name-ordered"
+      assert_operator result.index(first), :<, result.index(last)
+    end
+
+    test "ranks exact name match ahead of prefix and contains matches" do
+      exact = create_game("Kwyjibo")
+      prefix = create_game("Kwyjibo: The Sequel")
+      contains = create_game("A History of Kwyjibo")
+      # Enough matches so the BGG fallback is not triggered
+      3.times { |i| create_game("Kwyjibo Filler #{i}") }
+
+      result = @query.call({ name: "Kwyjibo" }).to_a
+
+      assert_operator result.index(exact), :<, result.index(prefix)
+      assert_operator result.index(prefix), :<, result.index(contains)
+    end
+
+    test "relevance ranking is applied within the base game group despite name order" do
+      # "A ..." would sort first alphabetically, but a mere contains match should
+      # rank below the exact match "Kwyjibo".
+      exact = create_game("Kwyjibo")
+      alphabetically_first = create_game("A Kwyjibo Adventure")
+      3.times { |i| create_game("Kwyjibo Filler #{i}") }
+
+      result = @query.call({ name: "Kwyjibo" }).to_a
+
+      assert_operator result.index(exact), :<, result.index(alphabetically_first)
+    end
+
     # Tests for BGG import integration
 
     test "imports from BGG when no results found" do
@@ -269,6 +320,23 @@ module BoardGames
       result = query_without_importer.call({ name: "Backcompat" })
 
       assert result.count >= 5
+    end
+
+    private
+
+    def create_game(name)
+      BoardGame.create!(
+        name: name,
+        year_published: 2020,
+        min_players: 2,
+        max_players: 4,
+        min_playing_time: 30,
+        max_playing_time: 60,
+        rating: 7.0,
+        difficulty_score: 2.0,
+        game_types: [GameType.find_or_create_by!(name: "General")],
+        game_categories: [GameCategory.find_or_create_by!(name: "General")]
+      )
     end
   end
 end
