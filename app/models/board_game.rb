@@ -12,6 +12,7 @@ class BoardGame < ApplicationRecord
   has_one :bgg_board_game_association, dependent: :destroy
   has_many :videos, dependent: :destroy
   has_many :game_photos, dependent: :destroy
+  has_many :game_instructions, dependent: :destroy
 
   # Relations using board_game_relations table
   has_many :outgoing_relations, class_name: 'BoardGameRelation',

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_07_15_113938) do
+ActiveRecord::Schema[8.0].define(version: 2026_07_15_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -115,6 +115,16 @@ ActiveRecord::Schema[8.0].define(version: 2026_07_15_113938) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["name"], name: "index_game_categories_on_name", unique: true
+  end
+
+  create_table "game_instructions", force: :cascade do |t|
+    t.bigint "board_game_id", null: false
+    t.string "language", null: false
+    t.string "category", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["board_game_id", "language", "category"], name: "index_game_instructions_on_game_language_category", unique: true
+    t.index ["board_game_id"], name: "index_game_instructions_on_board_game_id"
   end
 
   create_table "game_photos", force: :cascade do |t|
@@ -275,6 +285,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_07_15_113938) do
   add_foreign_key "bgg_board_game_associations", "board_games", on_delete: :cascade
   add_foreign_key "board_game_relations", "board_games", column: "source_game_id", on_delete: :cascade
   add_foreign_key "board_game_relations", "board_games", column: "target_game_id", on_delete: :cascade
+  add_foreign_key "game_instructions", "board_games"
   add_foreign_key "game_photos", "board_games"
   add_foreign_key "solid_queue_blocked_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade
   add_foreign_key "solid_queue_claimed_executions", "solid_queue_jobs", column: "job_id", on_delete: :cascade

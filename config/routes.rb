@@ -19,6 +19,7 @@ Rails.application.routes.draw do
           get :related_ids
         end
         resources :photos, only: [:index, :create, :destroy], controller: 'game_photos'
+        resources :instructions, only: [:index, :create, :destroy], controller: 'game_instructions'
       end
     end
   end

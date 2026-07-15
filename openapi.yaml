@@ -288,6 +288,142 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
 
+  /api/v1/board_games/{board_game_id}/instructions:
+    get:
+      summary: List a game's instructions
+      description: List user-uploaded reference PDFs for a board game, tagged by language and category.
+      operationId: listGameInstructions
+      tags:
+        - Game Instructions
+      parameters:
+        - name: board_game_id
+          in: path
+          required: true
+          schema:
+            type: integer
+            example: 1
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GameInstruction'
+        '404':
+          description: Board game not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    post:
+      summary: Upload a game instruction
+      description: >
+        Upload a reference PDF (up to 20MB) for a board game, tagged by language and category.
+        One file per game + language + category; a repeat combo is rejected with 409.
+        No authentication (accepted tradeoff for a single-user local app).
+      operationId: createGameInstruction
+      tags:
+        - Game Instructions
+      parameters:
+        - name: board_game_id
+          in: path
+          required: true
+          schema:
+            type: integer
+            example: 1
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - document
+                - language
+                - category
+              properties:
+                document:
+                  type: string
+                  format: binary
+                language:
+                  type: string
+                  enum: [en, lt]
+                category:
+                  type: string
+                  enum: [guide, manual, quick_reference]
+      responses:
+        '201':
+          description: Instruction created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GameInstruction'
+        '400':
+          description: No document provided
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Board game not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: An instruction for this game + language + category already exists
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errors:
+                    type: array
+                    items:
+                      type: string
+        '422':
+          description: Validation failed (bad type, too large, or unknown language/category)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errors:
+                    type: array
+                    items:
+                      type: string
+
+  /api/v1/board_games/{board_game_id}/instructions/{id}:
+    delete:
+      summary: Delete a game instruction
+      operationId: deleteGameInstruction
+      tags:
+        - Game Instructions
+      parameters:
+        - name: board_game_id
+          in: path
+          required: true
+          schema:
+            type: integer
+            example: 1
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            example: 1
+      responses:
+        '204':
+          description: Instruction deleted
+        '404':
+          description: Board game or instruction not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
   /api/v1/board_games/search:
     get:
       summary: Search board games
@@ -413,6 +549,24 @@ components:
           type: string
           description: Absolute URL of a small (max 400x400) variant for the gallery grid
           example: "http://localhost:3002/rails/active_storage/representations/redirect/.../photo.jpg"
+    GameInstruction:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        language:
+          type: string
+          enum: [en, lt]
+          example: "en"
+        category:
+          type: string
+          enum: [guide, manual, quick_reference]
+          example: "manual"
+        url:
+          type: string
+          description: Absolute URL of the PDF document
+          example: "http://localhost:3002/rails/active_storage/blobs/redirect/.../rules.pdf"
     BoardGame:
       type: object
       properties:
