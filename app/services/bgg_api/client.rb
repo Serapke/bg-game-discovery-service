@@ -344,6 +344,11 @@ module BggApi
       }.merge(extract_suggested_numplayers(item)).compact
     end
 
+    # Matches any letter outside the Latin script (Devanagari, CJK, Cyrillic, …).
+    # BGG's language field is user-submitted and unreliable — non-English videos
+    # are sometimes tagged "English", so we also screen titles for foreign scripts.
+    NON_LATIN_LETTER = /[\p{L}&&[^\p{Latin}]]/
+
     # Parse the videos AJAX endpoint response into the video hash shape consumed by
     # GameImporter#sync_videos. The `gallery=instructional` request param already
     # scopes to instructional videos server-side; here we keep only English videos
@@ -358,6 +363,7 @@ module BggApi
       items.each_with_object([]) do |video, acc|
         next unless video["videohost"] == "youtube"
         next unless video["language"] == "English"
+        next if video["title"].to_s.match?(NON_LATIN_LETTER)
 
         youtube_video_id = video["extvideoid"]
         next if youtube_video_id.blank? || seen.include?(youtube_video_id)

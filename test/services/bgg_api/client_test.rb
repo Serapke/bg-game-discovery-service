@@ -934,6 +934,17 @@ module BggApi
       )
     end
 
+    test "get_videos drops videos with non-Latin script titles despite English tag" do
+      stub_get_videos(13, [
+        video_item("dddddddddd1", title: "CATAN हिंदी How to Play | कैसे खेलते हैं CATAN"),
+        video_item("eeeeeeeeee2", title: "カタン の遊び方"),
+        video_item("8Nx6Jij2q3s", title: "Cátan: how to play — über quick!")
+      ])
+
+      videos = @client.get_videos(13)
+      assert_equal ["8Nx6Jij2q3s"], videos.map { |v| v[:youtube_video_id] }
+    end
+
     test "get_videos de-dupes repeated video IDs" do
       stub_get_videos(13, [
         video_item("8Nx6Jij2q3s"),
