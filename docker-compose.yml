@@ -36,6 +36,7 @@ services:
       - BGG_API_TOKEN=${BGG_API_TOKEN}
       - YOUTUBE_API_KEY=${YOUTUBE_API_KEY}
       - RECOMMENDER_SERVICE_URL=${RECOMMENDER_SERVICE_URL:-http://host.docker.internal:3004}
+      - FRONTEND_TAILNET_ORIGIN=http://mantass-macbook-pro.tail3033c9.ts.net:5173
     ports:
       - "3002:3002"
       - "1234:1234"  # Debug port for rdbg

@@ -53,4 +53,8 @@ Rails.application.configure do
   # Disable host checking in development for app helper
   config.hosts << "www.example.com"
   config.hosts << "host.docker.internal"
+
+  # Allow access over the Tailscale tailnet (see REMOTE_ACCESS.md).
+  # Matches any host under the *.ts.net tailnet domain.
+  config.hosts << /.*\.ts\.net/
 end
