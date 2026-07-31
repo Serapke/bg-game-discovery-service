@@ -3,6 +3,8 @@ catan:
   year_published: 1995
   min_players: 3
   max_players: 4
+  best_min_players: 4
+  best_max_players: 4
   min_playing_time: 60
   max_playing_time: 90
   rating: 7.2
